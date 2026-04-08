@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#0a1628"/>
+<meta name="description" content="ReviveIQ v2.1 — The Code Blue Assistant. High-performance CPR monitor with real-time CCF tracking for ACLS teams."/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ReviveIQ"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" href="icons/icon-192.png"/>
+<title>ReviveIQ — The Code Blue Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a1628;--surface:#0f2040;--surface2:#162a50;
+  --border:#1e3a6a;--border2:#254880;
+  --accent:#00d4ff;--accent2:#0099cc;
+  --red:#ff4757;--amber:#ffb627;--green:#00e676;--purple:#c084fc;--teal:#00d4aa;
+  --text:#e8f0fe;--text2:#8fadd6;--text3:#4a7ab5;
+  --mono:'DM Mono',monospace;--head:'Syne',sans-serif;--body:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden}
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:20px;height:20px}
+.logo-text{display:flex;flex-direction:column;line-height:1}
+.logo-title{font-family:var(--head);font-size:16px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.logo-sub{font-size:10px;color:var(--accent);letter-spacing:1.2px;font-weight:500;text-transform:uppercase;margin-top:2px}
+.hbtn{padding:6px 11px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--body);font-size:13px;cursor:pointer;transition:all 0.15s}
+.hbtn:hover{background:var(--surface2);color:var(--text)}
+
+/* MAIN */
+.main{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:0.875rem;max-width:800px;margin:0 auto;width:100%}
+
+/* MASTER CLOCK */
+.clock-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;text-align:center;position:relative;overflow:hidden}
+.clock-panel::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,255,0.07) 0%,transparent 70%);pointer-events:none}
+.clock-label{font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.clock-time{font-family:var(--mono);font-size:64px;font-weight:500;color:var(--accent);letter-spacing:4px;line-height:1;transition:color 0.3s,text-shadow 0.3s}
+.clock-time.running{animation:pulse-glow 2s ease-in-out infinite}
+.clock-time.warn{color:var(--red)!important;text-shadow:0 0 30px rgba(255,71,87,0.6)!important;animation:pulse-red 0.8s ease-in-out infinite!important}
+@keyframes pulse-glow{0%,100%{text-shadow:0 0 20px rgba(0,212,255,0.3)}50%{text-shadow:0 0 40px rgba(0,212,255,0.6)}}
+@keyframes pulse-red{0%,100%{text-shadow:0 0 20px rgba(255,71,87,0.4)}50%{text-shadow:0 0 50px rgba(255,71,87,0.9)}}
+.clock-wall{font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:6px}
+
+/* SUB TIMERS */
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem}
+.time-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.75rem;text-align:center}
+.time-card .tval{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text2);line-height:1;transition:color 0.3s}
+.time-card .tval.comp-on{color:var(--green);animation:pulse-glow 2s ease-in-out infinite}
+.time-card .tlbl{font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase}
+
+/* START CODE BLUE BUTTON */
+.start-btn{width:100%;padding:16px;font-family:var(--head);font-size:17px;font-weight:800;letter-spacing:1px;border-radius:12px;border:2px solid var(--accent);background:rgba(0,212,255,0.08);color:var(--accent);cursor:pointer;transition:all 0.2s;text-transform:uppercase}
+.start-btn:hover{background:rgba(0,212,255,0.15)}
+.start-btn.active{border-color:var(--red);background:rgba(255,71,87,0.08);color:var(--red)}
+.start-btn.active:hover{background:rgba(255,71,87,0.15)}
+
+/* REMINDER */
+.reminder{display:none;padding:11px 16px;border-radius:10px;font-family:var(--head);font-size:14px;font-weight:600;border:1.5px solid}
+.reminder.on{display:block;animation:flash-in 0.3s ease}
+@keyframes flash-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.reminder.rdue{background:rgba(255,182,39,0.12);border-color:var(--amber);color:var(--amber)}
+.reminder.sdue{background:rgba(255,71,87,0.12);border-color:var(--red);color:var(--red)}
+.reminder.ddue{background:rgba(192,132,252,0.12);border-color:var(--purple);color:var(--purple)}
+.reminder.w15{background:rgba(255,71,87,0.1);border-color:var(--red);color:var(--red);animation:flash-in 0.3s ease,blink 1s ease infinite}
+@keyframes blink{0%,100%{border-color:var(--red)}50%{border-color:rgba(255,71,87,0.2)}}
+
+/* COUNTERS */
+.counters{display:grid;grid-template-columns:repeat(4,1fr);gap:0.625rem}
+.counter{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.75rem;text-align:center}
+.counter .num{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1;transition:color 0.4s}
+.counter .lbl{font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase}
+.c-shock .num{color:var(--red)}
+.c-drug .num{color:var(--purple)}
+.c-rhythm .num{color:var(--teal)}
+.c-ccf .num{font-size:20px;color:var(--green);transition:color 0.4s}
+
+/* CCF PANEL */
+.ccf-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.ccf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ccf-label{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.ccf-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background 0.4s}
+.ccf-dot.live{background:var(--green);animation:pulse-glow 1.5s ease-in-out infinite}
+.ccf-pct{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--green);transition:color 0.4s}
+.ccf-track{height:12px;background:var(--surface2);border-radius:100px;overflow:hidden;margin-bottom:8px;border:1px solid var(--border)}
+.ccf-fill{height:100%;width:0%;background:var(--green);border-radius:100px;transition:width 0.9s ease,background 0.4s}
+.ccf-foot{display:flex;justify-content:space-between;align-items:center}
+.ccf-status{font-size:12px;font-weight:600;font-family:var(--head);transition:color 0.4s;color:var(--text3)}
+.ccf-target{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* ACTION PANELS */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.ptitle{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.75rem;display:flex;align-items:center;gap:6px}
+.ptitle::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.ptitle.red{color:var(--red)}.ptitle.teal{color:var(--teal)}.ptitle.purple{color:var(--purple)}.ptitle.blue{color:var(--accent)}
+
+.abtn{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:6px;text-align:left;transition:all 0.15s;display:block}
+.abtn:last-of-type{margin-bottom:0}
+.abtn:hover:not(:disabled){background:rgba(255,255,255,0.07)}
+.abtn:disabled{opacity:0.3;cursor:not-allowed}
+.abtn.r{border-color:rgba(255,71,87,0.4);color:var(--red);background:rgba(255,71,87,0.05)}.abtn.r:hover:not(:disabled){background:rgba(255,71,87,0.13)}
+.abtn.t{border-color:rgba(0,212,170,0.4);color:var(--teal);background:rgba(0,212,170,0.05)}.abtn.t:hover:not(:disabled){background:rgba(0,212,170,0.13)}
+.abtn.p{border-color:rgba(192,132,252,0.4);color:var(--purple);background:rgba(192,132,252,0.05)}.abtn.p:hover:not(:disabled){background:rgba(192,132,252,0.13)}
+.abtn.a{border-color:rgba(255,182,39,0.4);color:var(--amber);background:rgba(255,182,39,0.05)}.abtn.a:hover:not(:disabled){background:rgba(255,182,39,0.13)}
+.abtn.b{border-color:rgba(0,212,255,0.4);color:var(--accent);background:rgba(0,212,255,0.05)}.abtn.b:hover:not(:disabled){background:rgba(0,212,255,0.13)}
+.abtn.g{border-color:rgba(0,230,118,0.4);color:var(--green);background:rgba(0,230,118,0.05)}.abtn.g:hover:not(:disabled){background:rgba(0,230,118,0.13)}
+.abtn.lit{box-shadow:inset 0 0 0 2px currentColor;font-weight:700;opacity:1!important}
+
+.joule-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.joule-row input{width:72px;padding:8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:14px;text-align:center}
+.joule-row input:focus{outline:none;border-color:var(--red)}
+.joule-row span{font-size:13px;color:var(--text3)}
+.dselect{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--body);font-size:13px;margin-bottom:8px;cursor:pointer}
+.dselect:focus{outline:none;border-color:var(--purple)}
+.dselect option{background:var(--surface)}
+.custom-row{display:none;margin-bottom:8px}
+.custom-row.show{display:block}
+.custom-row input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(192,132,252,0.5);background:var(--surface2);color:var(--text);font-family:var(--body);font-size:13px}
+.custom-row input::placeholder{color:var(--text3)}
+.custom-row input:focus{outline:none;border-color:var(--purple)}
+.nxt{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:6px}
+.nxt b{color:var(--text2)}.nxt.w{color:var(--red)}.nxt.w b{color:var(--red)}
+.adralert{font-size:12px;font-weight:600;color:var(--purple);margin-top:5px;font-family:var(--head)}
+.sep{height:1px;background:var(--border);margin:6px 0}
+
+/* EVENT LOG
+   Grid: [elapsed+clock stacked | badge | event text]
+   CCF is embedded in event text — NOT a separate column */
+.log-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.log-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
+.log-title{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
+.log-cnt{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.log-col-head{display:grid;grid-template-columns:68px auto 1fr;gap:8px;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.log-col-head span{font-family:var(--head);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase}
+.log-list{max-height:320px;overflow-y:auto}
+.log-list::-webkit-scrollbar{width:4px}
+.log-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.log-entry{display:grid;grid-template-columns:68px auto 1fr;align-items:start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.log-entry:last-child{border-bottom:none}
+.log-time{font-family:var(--mono);line-height:1.5}
+.ct{display:block;font-size:13px;color:var(--text2);font-weight:500}
+.wt{display:block;font-size:10px;color:var(--text3)}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;white-space:nowrap;letter-spacing:0.5px;text-transform:uppercase;margin-top:2px;display:inline-block}
+.bshock{background:rgba(255,71,87,0.15);color:var(--red);border:1px solid rgba(255,71,87,0.3)}
+.bdrug{background:rgba(192,132,252,0.15);color:var(--purple);border:1px solid rgba(192,132,252,0.3)}
+.brhythm{background:rgba(255,182,39,0.15);color:var(--amber);border:1px solid rgba(255,182,39,0.3)}
+.bcpr{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid rgba(0,230,118,0.3)}
+.brosc{background:rgba(0,212,255,0.15);color:var(--accent);border:1px solid rgba(0,212,255,0.3)}
+.bterm{background:rgba(255,71,87,0.2);color:var(--red);border:1px solid rgba(255,71,87,0.5)}
+.bnote{background:rgba(255,255,255,0.05);color:var(--text2);border:1px solid var(--border)}
+.log-txt{font-size:13px;color:var(--text);line-height:1.5;padding-top:1px}
+.log-ccf-tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;margin-left:6px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);vertical-align:middle}
+.no-log{font-size:13px;color:var(--text3);text-align:center;padding:1.5rem 0}
+
+/* BOTTOM ROW */
+.bot-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.bot-btn{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:var(--head);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.bot-btn:hover{background:var(--surface2);color:var(--text)}
+.bot-btn.danger{border-color:rgba(255,71,87,0.45);color:var(--red)}
+.bot-btn.danger:hover{background:rgba(255,71,87,0.07)}
+
+/* FOOTER */
+.footer{padding:0.75rem 1.25rem;border-top:1px solid var(--border);text-align:center}
+.footer-text{font-size:11px;color:var(--text3)}
+.footer-text span{color:var(--accent)}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:1.5rem;max-width:460px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:var(--head);font-size:20px;font-weight:800;color:var(--text);margin-bottom:0.75rem}
+.modal p{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1rem}
+.mclose{float:right;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.about-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--text2);line-height:1.9}
+.about-block strong{color:var(--text);font-weight:500}
+
+/* PRINT */
+.print-header{display:none}
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .header,.start-btn,.reminder,.panels,.ccf-panel,.time-row,.footer,.bot-row,.overlay{display:none!important}
+  .main{padding:0;gap:0.5rem}
+  .print-header{display:block;border-bottom:2px solid #000;padding-bottom:0.5rem;margin-bottom:0.75rem}
+  .print-header h1{font-size:18px;font-weight:700}
+  .print-header p{font-size:12px;color:#444;margin-top:3px}
+  .clock-panel{background:#f5f5f5!important;border:1px solid #ccc!important;break-inside:avoid}
+  .clock-panel::before{display:none}
+  .clock-time{color:#000!important;text-shadow:none!important;font-size:38px;animation:none!important}
+  .clock-label,.clock-wall{color:#555!important}
+  .counters{break-inside:avoid;gap:6px}
+  .counter{background:#f9f9f9!important;border:1px solid #ddd!important}
+  .counter .num{color:#000!important;font-size:20px}
+  .counter .lbl{color:#555!important}
+  .log-panel{background:#fff!important;border:1px solid #ccc!important;break-inside:avoid}
+  .log-list{max-height:none!important;overflow:visible!important}
+  .log-col-head span,.log-title,.log-cnt{color:#555!important}
+  .log-entry{border-bottom:1px solid #eee!important;break-inside:avoid}
+  .ct{color:#000!important}.wt{color:#555!important}
+  .log-txt{color:#000!important}
+  .badge{background:#eee!important;color:#333!important;border:1px solid #999!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .log-ccf-tag{background:#eee!important;color:#333!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .no-log{color:#555!important}
+}
+
+@media(max-width:500px){
+  .panels{grid-template-columns:1fr}
+  .counters{grid-template-columns:repeat(2,1fr)}
+  .clock-time{font-size:50px}
+  .log-entry,.log-col-head{grid-template-columns:60px auto 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="print-header">
+  <h1>ReviveIQ — The Code Blue Assistant</h1>
+  <p id="printTime"></p>
+</div>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="2,12 6,12 8,5 10,19 12,12 14,15 16,9 18,12 22,12"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-title">ReviveIQ</div>
+      <div class="logo-sub">The Code Blue Assistant</div>
+    </div>
+  </div>
+  <button class="hbtn" onclick="openAbout()">About</button>
+</header>
+
+<main class="main">
+
+  <div class="clock-panel">
+    <div class="clock-label">Code Blue elapsed time</div>
+    <div class="clock-time" id="clock">00:00</div>
+    <div class="clock-wall" id="wallclock">&nbsp;</div>
+  </div>
+
+  <div class="time-row">
+    <div class="time-card">
+      <div class="tval" id="compTime">00:00</div>
+      <div class="tlbl">Compression time</div>
+    </div>
+    <div class="time-card">
+      <div class="tval" id="noflowTime">00:00</div>
+      <div class="tlbl">No-flow time</div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="startBtn" onclick="toggleCodeBlue()">&#9654;&#160; START CODE BLUE</button>
+
+  <div class="reminder" id="reminderBar"></div>
+
+  <div class="counters">
+    <div class="counter c-shock"><div class="num" id="shockCount">0</div><div class="lbl">Shocks</div></div>
+    <div class="counter c-drug"><div class="num" id="drugCount">0</div><div class="lbl">Drug doses</div></div>
+    <div class="counter c-rhythm"><div class="num" id="rhythmCount">0</div><div class="lbl">Rhythm checks</div></div>
+    <div class="counter c-ccf"><div class="num" id="ccfTile">&#8212;</div><div class="lbl">CCF</div></div>
+  </div>
+
+  <div class="ccf-panel">
+    <div class="ccf-head">
+      <div class="ccf-label"><span class="ccf-dot" id="ccfDot"></span>Chest compression fraction</div>
+      <div class="ccf-pct" id="ccfPct">&#8212;</div>
+    </div>
+    <div class="ccf-track"><div class="ccf-fill" id="ccfBar"></div></div>
+    <div class="ccf-foot">
+      <div class="ccf-status" id="ccfStatus">Start Code Blue to begin tracking</div>
+      <div class="ccf-target">AHA target &#8805; 80%</div>
+    </div>
+  </div>
+
+  <div class="panels">
+
+    <div class="panel">
+      <div class="ptitle red">Defibrillation</div>
+      <div class="joule-row">
+        <input type="number" id="jouleInput" value="200" min="1" max="360"/>
+        <span>Joules</span>
+      </div>
+      <button class="abtn r" id="btnShock" onclick="logShock()" disabled>&#9889; Log shock delivered</button>
+      <div class="nxt" id="nextShock"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle teal">Rhythm check</div>
+      <button class="abtn t" id="btnR1" onclick="logRhythm('Non-shockable (PEA / Asystole)')" disabled>Non-shockable &#8212; PEA / Asystole</button>
+      <button class="abtn t" id="btnR2" onclick="logRhythm('Shockable (VF / pVT)')" disabled>Shockable &#8212; VF / pVT</button>
+      <div class="nxt" id="nextRhythm"></div>
+      <div class="adralert" id="adrAlert"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle purple">Drugs</div>
+      <select class="dselect" id="drugSelect" onchange="onDrugChange()">
+        <option>Adrenaline 1mg IV</option>
+        <option>Amiodarone 300mg IV</option>
+        <option>Amiodarone 150mg IV</option>
+        <option>Atropine 0.6mg IV</option>
+        <option>Calcium gluconate 10ml IV</option>
+        <option>Magnesium sulphate 2g IV</option>
+        <option>Sodium bicarbonate 50ml IV</option>
+        <option>Lidocaine 100mg IV</option>
+        <option>Dextrose 50% 50ml IV</option>
+        <option value="other">Other (specify)</option>
+      </select>
+      <div class="custom-row" id="customRow">
+        <input type="text" id="customDrug" placeholder="Enter drug name &amp; dose…" maxlength="60"/>
+      </div>
+      <button class="abtn p" id="btnDrug" onclick="logDrug()" disabled>&#128137; Log drug given</button>
+      <div class="nxt" id="nextDrug"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle blue">Events</div>
+      <button class="abtn g" id="btnCompStart"  onclick="startCompressions()"  disabled>&#9654; Start compressions</button>
+      <button class="abtn b" id="btnCompStop"   onclick="stopCompressions()"   disabled>&#9646;&#9646; Stop compressions</button>
+      <button class="abtn g" id="btnCompResume" onclick="resumeCompressions()" disabled>&#9654;&#9654; Resume compressions</button>
+      <div class="sep"></div>
+      <button class="abtn a" id="btnROSC" onclick="logROSC()"       disabled>&#10003; ROSC achieved</button>
+      <button class="abtn r" id="btnTerm" onclick="logTerminated()"  disabled>&#9632; CPR terminated</button>
+      <div class="sep"></div>
+      <button class="abtn"   id="btnIO"   onclick="logEvent('IV / IO access obtained','note')" disabled>&#128568; IV / IO access</button>
+    </div>
+
+  </div>
+
+  <div class="log-panel">
+    <div class="log-head">
+      <div class="log-title">Event log</div>
+      <div class="log-cnt" id="logCount">0 events</div>
+    </div>
+    <div class="log-col-head">
+      <span>Elapsed / Clock</span><span>Type</span><span>Event</span>
+    </div>
+    <div class="log-list" id="logList">
+      <div class="no-log">Press "Start Code Blue" to begin the resuscitation record.</div>
+    </div>
+  </div>
+
+  <div class="bot-row">
+    <button class="bot-btn" onclick="doPrint()">&#128438; Print / Save PDF</button>
+    <button class="bot-btn danger" onclick="confirmReset()">&#8634; Reset session</button>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-text">ReviveIQ v2.1 &nbsp;&#183;&nbsp; <span>HealthionX Medical Solutions</span> &nbsp;&#183;&nbsp; Dr. Muhammed Alif</div>
+</footer>
+
+<!-- About -->
+<div class="overlay" id="aboutModal" onclick="if(event.target===this)closeAbout()">
+  <div class="modal">
+    <button class="mclose" onclick="closeAbout()">&#10005;</button>
+    <h2>ReviveIQ</h2>
+    <p style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.5rem">The Code Blue Assistant &nbsp;&#183;&nbsp; v2.1</p>
+    <div class="about-block">
+      <strong>App developed by</strong><br/>
+      Dr. Muhammed Alif<br/>
+      Consultant Anaesthesiologist &amp; Intensivist<br/>
+      Founder, HealthionX Medical Solutions
+    </div>
+    <p>Real-time Code Blue monitoring for the Timer-Recorder in a High-Performance Resuscitation Team. Tracks shocks, rhythm checks, drugs, and Chest Compression Fraction (CCF) live.</p>
+    <p><strong style="color:var(--text)">CCF logic:</strong> Code Blue clock = denominator. Compression time only accumulates when "Start compressions" is pressed. CCF drops in real time when compressions are paused.</p>
+    <div class="divider"></div>
+    <p style="font-size:12px;color:var(--text3)">Adrenaline: every 4 min (alternate rhythm checks). Rhythm check: every 2 min. CCF target: &#8805;80%. 15s advance warnings for all intervals. Based on AHA ACLS guidelines.</p>
+    <div class="divider"></div>
+    <p style="font-size:12px;color:var(--text3)">&#9888; For trained medical professionals only. Always follow institutional protocols and team leader directives.</p>
+    <button class="abtn" style="margin-top:0.5rem" onclick="closeAbout()">Close</button>
+  </div>
+</div>
+
+<!-- Reset confirm -->
+<div class="overlay" id="resetModal" onclick="if(event.target===this)closeReset()">
+  <div class="modal">
+    <button class="mclose" onclick="closeReset()">&#10005;</button>
+    <h2>Reset session?</h2>
+    <p>All timers, counters, CCF data, and the event log will be cleared. This cannot be undone.</p>
+    <button class="abtn r" onclick="doReset()" style="margin-bottom:8px">Yes, reset everything</button>
+    <button class="abtn" onclick="closeReset()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const RHYTHM_INT = 120;
+const ADR_INT    = 240;
+const WARN       = 15;
+
+// ── State ──────────────────────────────────────────────────────
+let codeRunning   = false;
+let compActive    = false;
+let elapsed       = 0;    // Code Blue total seconds — CCF denominator
+let compTime      = 0;    // banked compression seconds — CCF numerator
+let compStart     = null; // elapsed when current comp segment started
+let timerInterval = null;
+let startWallStr  = '';
+
+let shocks=0, drugs=0, rhythms=0;
+let lastShock=null, lastRhythm=null, lastAdr=null;
+let eventLog=[];
+
+// ── Helpers ────────────────────────────────────────────────────
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmt(s){ return pad(Math.floor(s/60))+':'+pad(s%60); }
+function wallNow(){ return new Date().toLocaleTimeString(); }
+
+function liveCompSec(){
+  return compTime + (compActive && compStart!==null ? (elapsed-compStart) : 0);
+}
+function liveCCF(){
+  if(elapsed===0) return 0;
+  return Math.round((liveCompSec()/elapsed)*100);
+}
+
+// CCF colour
+function ccfCol(pct){
+  if(pct>=80) return 'var(--green)';
+  if(pct>=60) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+// ── Code Blue toggle ───────────────────────────────────────────
+function toggleCodeBlue(){
+  if(!codeRunning){
+    codeRunning=true; elapsed=0; compTime=0; compStart=null; compActive=false;
+    let now=new Date(); startWallStr='Started: '+now.toLocaleTimeString();
+    timerInterval=setInterval(tick,1000);
+    document.getElementById('startBtn').innerHTML='&#9632;&#160; END CODE BLUE';
+    document.getElementById('startBtn').classList.add('active');
+    document.getElementById('clock').classList.add('running');
+    document.getElementById('clock').classList.remove('warn');
+    setEnabled(true);
+    updateCompBtns('idle');
+    addLog('&#128680; Code Blue started','cpr');
+  } else {
+    bankComp();
+    codeRunning=false; compActive=false;
+    clearInterval(timerInterval);
+    document.getElementById('startBtn').innerHTML='&#9654;&#160; START CODE BLUE';
+    document.getElementById('startBtn').classList.remove('active');
+    document.getElementById('clock').classList.remove('running','warn');
+    document.getElementById('reminderBar').className='reminder';
+    setEnabled(false);
+    updateCompBtns('ended');
+    addLog('&#9632; Code Blue ended | Total: '+fmt(elapsed)+' | Final CCF: '+liveCCF()+'%','cpr');
+    updateCCF();
+  }
+}
+
+// ── Compression control ─────────────────────────────────────────
+function startCompressions(){
+  if(!codeRunning||compActive) return;
+  compActive=true; compStart=elapsed;
+  document.getElementById('ccfDot').classList.add('live');
+  document.getElementById('compTime').classList.add('comp-on');
+  updateCompBtns('running');
+  addLog('CPR started','cpr');
+}
+
+function stopCompressions(){
+  if(!codeRunning||!compActive) return;
+  bankComp();
+  document.getElementById('ccfDot').classList.remove('live');
+  document.getElementById('compTime').classList.remove('comp-on');
+  updateCompBtns('stopped');
+  addLog('CPR paused | CCF: '+liveCCF()+'%','cpr');
+  updateCCF();
+}
+
+function resumeCompressions(){
+  if(!codeRunning||compActive) return;
+  compActive=true; compStart=elapsed;
+  document.getElementById('ccfDot').classList.add('live');
+  document.getElementById('compTime').classList.add('comp-on');
+  updateCompBtns('running');
+  addLog('CPR resumed','cpr');
+}
+
+function bankComp(){
+  if(compActive&&compStart!==null){
+    compTime+=(elapsed-compStart);
+    compStart=null; compActive=false;
+  }
+}
+
+function updateCompBtns(state){
+  let s=document.getElementById('btnCompStart');
+  let p=document.getElementById('btnCompStop');
+  let r=document.getElementById('btnCompResume');
+  [s,p,r].forEach(b=>{b.style.display='block';b.classList.remove('lit');});
+  if(state==='idle')   { p.style.display='none'; r.style.display='none'; }
+  if(state==='running'){ s.style.display='none'; r.style.display='none'; p.classList.add('lit'); }
+  if(state==='stopped'){ s.style.display='none'; p.style.display='none'; r.classList.add('lit'); }
+  if(state==='ended')  { s.style.display='none'; p.style.display='none'; r.style.display='none'; }
+}
+
+// ── Tick ───────────────────────────────────────────────────────
+function tick(){
+  elapsed++;
+  document.getElementById('clock').textContent=fmt(elapsed);
+  document.getElementById('wallclock').textContent=startWallStr;
+  let cs=liveCompSec();
+  document.getElementById('compTime').textContent=fmt(cs);
+  document.getElementById('noflowTime').textContent=fmt(elapsed-cs);
+  updateCountdowns();
+  checkReminders();
+  updateCCF();
+}
+
+// ── Countdowns ─────────────────────────────────────────────────
+function updateCountdowns(){
+  let rSince=lastRhythm!==null?elapsed-lastRhythm:elapsed;
+  let rRem=RHYTHM_INT-rSince;
+  let rEl=document.getElementById('nextRhythm');
+  rEl.className='nxt'+(rRem<=0||rRem<=WARN?' w':'');
+  rEl.innerHTML=rRem>0?'Next rhythm check in <b>'+rRem+'s</b>':'<b>Rhythm check due now!</b>';
+
+  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
+  let aRem=ADR_INT-aSince;
+  let dEl=document.getElementById('nextDrug');
+  let aEl=document.getElementById('adrAlert');
+  if(aRem>0){
+    dEl.className='nxt'+(aRem<=WARN?' w':'');
+    dEl.innerHTML='Adrenaline next in <b>'+aRem+'s</b> (~'+Math.ceil(aRem/60)+' min)';
+    aEl.textContent=aRem<=WARN?'Prepare adrenaline now!':'';
+  } else {
+    dEl.className='nxt w'; dEl.innerHTML='<b>Adrenaline due now!</b>';
+    aEl.textContent='Give adrenaline at this rhythm check';
+  }
+
+  if(lastShock!==null){
+    let sSince=elapsed-lastShock, sRem=RHYTHM_INT-sSince;
+    let sEl=document.getElementById('nextShock');
+    sEl.className='nxt'+(sRem<=0||sRem<=WARN?' w':'');
+    sEl.innerHTML=sRem>0?'Next shock cycle in <b>'+sRem+'s</b>':'<b>Shock cycle due!</b>';
+  }
+}
+
+// ── Reminders ──────────────────────────────────────────────────
+function checkReminders(){
+  let bar=document.getElementById('reminderBar');
+  let clk=document.getElementById('clock');
+  if(!codeRunning){ bar.className='reminder'; clk.classList.remove('warn'); return; }
+  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
+  let rSince=lastRhythm!==null?elapsed-lastRhythm:elapsed;
+  let sEl=lastShock!==null?elapsed-lastShock:null;
+
+  if(aSince>=ADR_INT)             { rb(bar,'ddue','💉 Adrenaline 1mg due — give at next rhythm check (4-min cycle)'); clk.classList.add('warn'); return; }
+  if(rSince>=RHYTHM_INT)           { rb(bar,'rdue','⏱ Rhythm check due — pause CPR for analysis'); clk.classList.add('warn'); return; }
+  if(sEl!==null&&sEl>=RHYTHM_INT)  { rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock'); clk.classList.add('warn'); return; }
+  if(aSince>=ADR_INT-WARN)         { rb(bar,'w15','⚠ Adrenaline due in '+(ADR_INT-aSince)+'s — prepare now'); clk.classList.add('warn'); return; }
+  if(rSince>=RHYTHM_INT-WARN)      { rb(bar,'w15','⚠ Rhythm check in '+(RHYTHM_INT-rSince)+'s — ready to pause'); clk.classList.add('warn'); return; }
+  if(sEl!==null&&sEl>=RHYTHM_INT-WARN){ rb(bar,'w15','⚠ Shock cycle check in '+(RHYTHM_INT-sEl)+'s'); clk.classList.add('warn'); return; }
+  bar.className='reminder'; clk.classList.remove('warn');
+}
+function rb(bar,cls,msg){ bar.className='reminder on '+cls; bar.textContent=msg; }
+
+// ── CCF display ────────────────────────────────────────────────
+function updateCCF(){
+  if(elapsed===0) return;
+  let pct=liveCCF();
+  let col=ccfCol(pct);
+  let msg=pct>=80?'Target met \u2265 80%':pct>=60?'Below target \u2014 minimise pauses':'Critical \u2014 resume compressions';
+  document.getElementById('ccfTile').textContent=pct+'%';
+  document.getElementById('ccfTile').style.color=col;
+  document.getElementById('ccfPct').textContent=pct+'%';
+  document.getElementById('ccfPct').style.color=col;
+  document.getElementById('ccfBar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('ccfBar').style.background=col;
+  document.getElementById('ccfStatus').textContent=msg;
+  document.getElementById('ccfStatus').style.color=col;
+}
+
+// ── Action logs ────────────────────────────────────────────────
+function logShock(){
+  if(!codeRunning) return;
+  let j=document.getElementById('jouleInput').value||200;
+  shocks++; lastShock=elapsed;
+  document.getElementById('shockCount').textContent=shocks;
+  addLog('Shock #'+shocks+' delivered \u2014 '+j+' J','shock');
+  document.getElementById('nextShock').className='nxt';
+  document.getElementById('nextShock').innerHTML='Next cycle in <b>120s</b>';
+}
+
+function logRhythm(label){
+  if(!codeRunning) return;
+  rhythms++; lastRhythm=elapsed;
+  document.getElementById('rhythmCount').textContent=rhythms;
+  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
+  let aNote=aSince>=ADR_INT?' \u2605 Adrenaline due \u2014 give now':'';
+  addLog('Rhythm check #'+rhythms+': '+label+aNote,'rhythm');
+  document.getElementById('nextRhythm').className='nxt';
+  document.getElementById('nextRhythm').innerHTML='Next check in <b>120s</b>';
+}
+
+function onDrugChange(){
+  let v=document.getElementById('drugSelect').value;
+  document.getElementById('customRow').className=v==='other'?'custom-row show':'custom-row';
+}
+
+function logDrug(){
+  if(!codeRunning) return;
+  let sel=document.getElementById('drugSelect');
+  let d=sel.value==='other'?document.getElementById('customDrug').value.trim():sel.value;
+  if(!d){ document.getElementById('customDrug').focus(); return; }
+  drugs++; document.getElementById('drugCount').textContent=drugs;
+  if(d.toLowerCase().includes('adrenaline')){
+    lastAdr=elapsed;
+    document.getElementById('nextDrug').className='nxt';
+    document.getElementById('nextDrug').innerHTML='Adrenaline next in <b>240s</b> (4 min)';
+    document.getElementById('adrAlert').textContent='';
+  }
+  addLog(d,'drug');
+}
+
+function logROSC(){
+  if(!codeRunning) return;
+  bankComp();
+  addLog('\u2713 ROSC achieved | CPR time: '+fmt(elapsed)+' | Final CCF: '+liveCCF()+'%','rosc');
+  toggleCodeBlue();
+}
+
+function logTerminated(){
+  if(!codeRunning) return;
+  bankComp();
+  addLog('\u25a0 CPR terminated | Total time: '+fmt(elapsed)+' | Final CCF: '+liveCCF()+'%','term');
+  toggleCodeBlue();
+}
+
+function logEvent(label,type){ if(!codeRunning) return; addLog(label,type); }
+
+// ── Event log ──────────────────────────────────────────────────
+// CCF is stored with each entry and shown inline in event text as a tag
+function addLog(text,type){
+  let pct=elapsed>0?liveCCF():null;
+  eventLog.unshift({ct:fmt(elapsed), wt:wallNow(), text, type, pct});
+  renderLog();
+}
+
+function renderLog(){
+  let el=document.getElementById('logList');
+  document.getElementById('logCount').textContent=eventLog.length+' event'+(eventLog.length!==1?'s':'');
+  if(eventLog.length===0){
+    el.innerHTML='<div class="no-log">Press "Start Code Blue" to begin the resuscitation record.</div>';
+    return;
+  }
+  const B={shock:'bshock',drug:'bdrug',rhythm:'brhythm',cpr:'bcpr',rosc:'brosc',term:'bterm',note:'bnote'};
+  const L={shock:'SHOCK',drug:'DRUG',rhythm:'RHYTHM',cpr:'CPR',rosc:'ROSC',term:'TERM',note:'NOTE'};
+  el.innerHTML=eventLog.map(e=>{
+    // CCF inline tag — coloured, appended after event text
+    let ccfTag='';
+    if(e.pct!==null){
+      let col=ccfCol(e.pct);
+      ccfTag=`<span class="log-ccf-tag" style="color:${col};border:1px solid ${col}">CCF ${e.pct}%</span>`;
+    }
+    return `
+    <div class="log-entry">
+      <div class="log-time"><span class="ct">${e.ct}</span><span class="wt">${e.wt}</span></div>
+      <span class="badge ${B[e.type]||'bnote'}">${L[e.type]||'NOTE'}</span>
+      <div class="log-txt">${e.text}${ccfTag}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Print ──────────────────────────────────────────────────────
+function doPrint(){
+  document.getElementById('printTime').textContent='Printed: '+new Date().toLocaleString();
+  window.print();
+}
+
+// ── Enable/disable buttons ─────────────────────────────────────
+function setEnabled(on){
+  ['btnShock','btnR1','btnR2','btnDrug','btnCompStart','btnCompStop','btnCompResume',
+   'btnROSC','btnTerm','btnIO'].forEach(id=>{
+    let b=document.getElementById(id); if(b) b.disabled=!on;
+  });
+}
+
+// ── Modals ─────────────────────────────────────────────────────
+function openAbout()  { document.getElementById('aboutModal').classList.add('open'); }
+function closeAbout() { document.getElementById('aboutModal').classList.remove('open'); }
+function confirmReset(){ document.getElementById('resetModal').classList.add('open'); }
+function closeReset() { document.getElementById('resetModal').classList.remove('open'); }
+
+// ── Reset ──────────────────────────────────────────────────────
+function doReset(){
+  codeRunning=false; compActive=false;
+  elapsed=0; compTime=0; compStart=null;
+  shocks=0; drugs=0; rhythms=0;
+  lastShock=null; lastRhythm=null; lastAdr=null;
+  startWallStr=''; eventLog=[];
+  clearInterval(timerInterval);
+  document.getElementById('clock').textContent='00:00';
+  document.getElementById('clock').classList.remove('running','warn');
+  document.getElementById('wallclock').innerHTML='&nbsp;';
+  document.getElementById('compTime').textContent='00:00';
+  document.getElementById('compTime').classList.remove('comp-on');
+  document.getElementById('noflowTime').textContent='00:00';
+  document.getElementById('startBtn').innerHTML='&#9654;&#160; START CODE BLUE';
+  document.getElementById('startBtn').classList.remove('active');
+  document.getElementById('reminderBar').className='reminder';
+  document.getElementById('shockCount').textContent='0';
+  document.getElementById('drugCount').textContent='0';
+  document.getElementById('rhythmCount').textContent='0';
+  let t=document.getElementById('ccfTile'),p=document.getElementById('ccfPct');
+  t.textContent='&#8212;'; t.style.color='var(--green)';
+  p.textContent='&#8212;'; p.style.color='var(--green)';
+  document.getElementById('ccfBar').style.width='0%';
+  document.getElementById('ccfBar').style.background='var(--green)';
+  document.getElementById('ccfStatus').textContent='Start Code Blue to begin tracking';
+  document.getElementById('ccfStatus').style.color='var(--text3)';
+  document.getElementById('ccfDot').classList.remove('live');
+  document.getElementById('nextShock').textContent='';
+  document.getElementById('nextRhythm').textContent='';
+  document.getElementById('nextDrug').textContent='';
+  document.getElementById('adrAlert').textContent='';
+  document.getElementById('customRow').className='custom-row';
+  document.getElementById('customDrug').value='';
+  document.getElementById('drugSelect').selectedIndex=0;
+  setEnabled(false); updateCompBtns('ended');
+  renderLog(); closeReset();
+}
+
+setInterval(()=>{ if(!codeRunning) document.getElementById('wallclock').textContent=new Date().toLocaleTimeString(); },1000);
+
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+
+renderLog();
+</script>
+</body>
+</html>
