@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="theme-color" content="#0a1628"/>
-<meta name="description" content="ReviveIQ v2.1 — The Code Blue Assistant. High-performance CPR monitor with real-time CCF tracking for ACLS teams."/>
+<meta name="description" content="ReviveIQ v2.2 — The Code Blue Assistant. Pathway-aware ACLS CPR monitor with real-time CCF tracking."/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="ReviveIQ"/>
@@ -28,7 +28,6 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden}
 body{display:flex;flex-direction:column;min-height:100vh}
 
-/* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -39,10 +38,9 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .hbtn{padding:6px 11px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--body);font-size:13px;cursor:pointer;transition:all 0.15s}
 .hbtn:hover{background:var(--surface2);color:var(--text)}
 
-/* MAIN */
 .main{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:0.875rem;max-width:800px;margin:0 auto;width:100%}
 
-/* MASTER CLOCK */
+/* CLOCK */
 .clock-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;text-align:center;position:relative;overflow:hidden}
 .clock-panel::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,255,0.07) 0%,transparent 70%);pointer-events:none}
 .clock-label{font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
@@ -60,7 +58,23 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .time-card .tval.comp-on{color:var(--green);animation:pulse-glow 2s ease-in-out infinite}
 .time-card .tlbl{font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase}
 
-/* START CODE BLUE BUTTON */
+/* PATHWAY BANNER */
+.pathway-bar{display:none;border-radius:10px;padding:10px 14px;border:1.5px solid;margin-bottom:0}
+.pathway-bar.show{display:flex;align-items:center;justify-content:space-between;gap:10px;animation:flash-in 0.3s ease}
+.pathway-bar.shock{background:rgba(255,71,87,0.1);border-color:var(--red)}
+.pathway-bar.noshock{background:rgba(0,212,170,0.08);border-color:var(--teal)}
+.pathway-label{font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:0.3px}
+.pathway-bar.shock .pathway-label{color:var(--red)}
+.pathway-bar.noshock .pathway-label{color:var(--teal)}
+.pathway-sub{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.pathway-change{font-family:var(--body);font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;white-space:nowrap}
+.pathway-change:hover{background:var(--surface2)}
+
+/* AMIODARONE ALERT */
+.amio-alert{display:none;padding:11px 16px;border-radius:10px;font-family:var(--head);font-size:14px;font-weight:600;border:1.5px solid var(--purple);background:rgba(192,132,252,0.12);color:var(--purple);animation:flash-in 0.3s ease}
+.amio-alert.show{display:block}
+
+/* START BUTTON */
 .start-btn{width:100%;padding:16px;font-family:var(--head);font-size:17px;font-weight:800;letter-spacing:1px;border-radius:12px;border:2px solid var(--accent);background:rgba(0,212,255,0.08);color:var(--accent);cursor:pointer;transition:all 0.2s;text-transform:uppercase}
 .start-btn:hover{background:rgba(0,212,255,0.15)}
 .start-btn.active{border-color:var(--red);background:rgba(255,71,87,0.08);color:var(--red)}
@@ -118,6 +132,13 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .abtn.g{border-color:rgba(0,230,118,0.4);color:var(--green);background:rgba(0,230,118,0.05)}.abtn.g:hover:not(:disabled){background:rgba(0,230,118,0.13)}
 .abtn.lit{box-shadow:inset 0 0 0 2px currentColor;font-weight:700;opacity:1!important}
 
+/* Pathway select buttons inside rhythm panel */
+.pathway-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.pbtn{padding:8px 6px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:0.5px;cursor:pointer;text-align:center;transition:all 0.15s;text-transform:uppercase}
+.pbtn:disabled{opacity:0.3;cursor:not-allowed}
+.pbtn.shock-btn{color:var(--red);border-color:rgba(255,71,87,0.4)}.pbtn.shock-btn:hover:not(:disabled){background:rgba(255,71,87,0.1)}
+.pbtn.noshock-btn{color:var(--teal);border-color:rgba(0,212,170,0.4)}.pbtn.noshock-btn:hover:not(:disabled){background:rgba(0,212,170,0.08)}
+
 .joule-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .joule-row input{width:72px;padding:8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:14px;text-align:center}
 .joule-row input:focus{outline:none;border-color:var(--red)}
@@ -135,9 +156,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .adralert{font-size:12px;font-weight:600;color:var(--purple);margin-top:5px;font-family:var(--head)}
 .sep{height:1px;background:var(--border);margin:6px 0}
 
-/* EVENT LOG
-   Grid: [elapsed+clock stacked | badge | event text]
-   CCF is embedded in event text — NOT a separate column */
+/* EVENT LOG */
 .log-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem}
 .log-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem}
 .log-title{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
@@ -171,12 +190,10 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .bot-btn.danger{border-color:rgba(255,71,87,0.45);color:var(--red)}
 .bot-btn.danger:hover{background:rgba(255,71,87,0.07)}
 
-/* FOOTER */
 .footer{padding:0.75rem 1.25rem;border-top:1px solid var(--border);text-align:center}
 .footer-text{font-size:11px;color:var(--text3)}
 .footer-text span{color:var(--accent)}
 
-/* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:500;align-items:center;justify-content:center;padding:1rem}
 .overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:1.5rem;max-width:460px;width:100%;max-height:90vh;overflow-y:auto}
@@ -190,28 +207,32 @@ body{display:flex;flex-direction:column;min-height:100vh}
 /* PRINT */
 .print-header{display:none}
 @media print{
-  body{background:#fff!important;color:#000!important}
-  .header,.start-btn,.reminder,.panels,.ccf-panel,.time-row,.footer,.bot-row,.overlay{display:none!important}
-  .main{padding:0;gap:0.5rem}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important;color:#000!important}
+  .header,.start-btn,.reminder,.amio-alert,.panels,.ccf-panel,.time-row,.pathway-bar,.footer,.bot-row,.overlay{display:none!important}
+  .main{padding:0!important;gap:0.5rem!important;max-width:100%!important;overflow:visible!important;height:auto!important;flex:none!important}
   .print-header{display:block;border-bottom:2px solid #000;padding-bottom:0.5rem;margin-bottom:0.75rem}
-  .print-header h1{font-size:18px;font-weight:700}
+  .print-header h1{font-size:18px;font-weight:700;color:#000}
   .print-header p{font-size:12px;color:#444;margin-top:3px}
-  .clock-panel{background:#f5f5f5!important;border:1px solid #ccc!important;break-inside:avoid}
+  .clock-panel{background:#f5f5f5!important;border:1px solid #ccc!important;break-inside:avoid;overflow:visible!important}
   .clock-panel::before{display:none}
   .clock-time{color:#000!important;text-shadow:none!important;font-size:38px;animation:none!important}
   .clock-label,.clock-wall{color:#555!important}
-  .counters{break-inside:avoid;gap:6px}
+  .counters{break-inside:avoid;gap:6px;overflow:visible!important}
   .counter{background:#f9f9f9!important;border:1px solid #ddd!important}
   .counter .num{color:#000!important;font-size:20px}
   .counter .lbl{color:#555!important}
-  .log-panel{background:#fff!important;border:1px solid #ccc!important;break-inside:avoid}
-  .log-list{max-height:none!important;overflow:visible!important}
+  /* LOG: fully unconstrained — flows across as many pages as needed */
+  .log-panel{background:#fff!important;border:1px solid #ccc!important;overflow:visible!important;height:auto!important;max-height:none!important;break-inside:auto!important;page-break-inside:auto!important}
+  .log-list{max-height:none!important;height:auto!important;min-height:0!important;overflow:visible!important;display:block!important;position:static!important}
+  .log-col-head{border-bottom:1px solid #ccc!important}
   .log-col-head span,.log-title,.log-cnt{color:#555!important}
-  .log-entry{border-bottom:1px solid #eee!important;break-inside:avoid}
-  .ct{color:#000!important}.wt{color:#555!important}
-  .log-txt{color:#000!important}
-  .badge{background:#eee!important;color:#333!important;border:1px solid #999!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .log-ccf-tag{background:#eee!important;color:#333!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .log-entry{border-bottom:1px solid #eee!important;break-inside:avoid!important;page-break-inside:avoid!important;overflow:visible!important}
+  .log-txt{font-size:12px!important;color:#000!important}
+  .ct{font-size:12px!important;color:#000!important}
+  .wt{font-size:10px!important;color:#555!important}
+  .log-ccf-tag{font-size:10px!important;background:#eee!important;color:#333!important;border:1px solid #aaa!important}
+  .badge{background:#eee!important;color:#333!important;border:1px solid #999!important}
   .no-log{color:#555!important}
 }
 
@@ -266,6 +287,18 @@ body{display:flex;flex-direction:column;min-height:100vh}
 
   <button class="start-btn" id="startBtn" onclick="toggleCodeBlue()">&#9654;&#160; START CODE BLUE</button>
 
+  <!-- Pathway banner — shown after first rhythm check -->
+  <div class="pathway-bar" id="pathwayBar">
+    <div>
+      <div class="pathway-label" id="pathwayLabel"></div>
+      <div class="pathway-sub" id="pathwaySub"></div>
+    </div>
+    <button class="pathway-change" onclick="changePathway()">Change pathway</button>
+  </div>
+
+  <!-- Amiodarone / Lidocaine alert — content set dynamically by checkAmiodaroneAlert() -->
+  <div class="amio-alert" id="amioAlert"></div>
+
   <div class="reminder" id="reminderBar"></div>
 
   <div class="counters">
@@ -289,6 +322,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 
   <div class="panels">
 
+    <!-- Defibrillation -->
     <div class="panel">
       <div class="ptitle red">Defibrillation</div>
       <div class="joule-row">
@@ -299,14 +333,16 @@ body{display:flex;flex-direction:column;min-height:100vh}
       <div class="nxt" id="nextShock"></div>
     </div>
 
+    <!-- Rhythm check — with pathway selector -->
     <div class="panel">
       <div class="ptitle teal">Rhythm check</div>
-      <button class="abtn t" id="btnR1" onclick="logRhythm('Non-shockable (PEA / Asystole)')" disabled>Non-shockable &#8212; PEA / Asystole</button>
-      <button class="abtn t" id="btnR2" onclick="logRhythm('Shockable (VF / pVT)')" disabled>Shockable &#8212; VF / pVT</button>
+      <button class="abtn t" id="btnR1" onclick="logRhythm('non-shockable')" disabled>Non-shockable &#8212; PEA / Asystole</button>
+      <button class="abtn t" id="btnR2" onclick="logRhythm('shockable')"     disabled>Shockable &#8212; VF / pVT</button>
       <div class="nxt" id="nextRhythm"></div>
       <div class="adralert" id="adrAlert"></div>
     </div>
 
+    <!-- Drugs — pathway-aware label -->
     <div class="panel">
       <div class="ptitle purple">Drugs</div>
       <select class="dselect" id="drugSelect" onchange="onDrugChange()">
@@ -318,6 +354,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
         <option>Magnesium sulphate 2g IV</option>
         <option>Sodium bicarbonate 50ml IV</option>
         <option>Lidocaine 100mg IV</option>
+        <option>Lidocaine 50mg IV (2nd dose)</option>
         <option>Dextrose 50% 50ml IV</option>
         <option value="other">Other (specify)</option>
       </select>
@@ -326,18 +363,20 @@ body{display:flex;flex-direction:column;min-height:100vh}
       </div>
       <button class="abtn p" id="btnDrug" onclick="logDrug()" disabled>&#128137; Log drug given</button>
       <div class="nxt" id="nextDrug"></div>
+      <div class="adralert" id="amioNote" style="color:var(--teal)"></div>
     </div>
 
+    <!-- Events -->
     <div class="panel">
       <div class="ptitle blue">Events</div>
       <button class="abtn g" id="btnCompStart"  onclick="startCompressions()"  disabled>&#9654; Start compressions</button>
       <button class="abtn b" id="btnCompStop"   onclick="stopCompressions()"   disabled>&#9646;&#9646; Stop compressions</button>
       <button class="abtn g" id="btnCompResume" onclick="resumeCompressions()" disabled>&#9654;&#9654; Resume compressions</button>
       <div class="sep"></div>
-      <button class="abtn a" id="btnROSC" onclick="logROSC()"       disabled>&#10003; ROSC achieved</button>
-      <button class="abtn r" id="btnTerm" onclick="logTerminated()"  disabled>&#9632; CPR terminated</button>
+      <button class="abtn a" id="btnROSC" onclick="logROSC()"      disabled>&#10003; ROSC achieved</button>
+      <button class="abtn r" id="btnTerm" onclick="logTerminated()" disabled>&#9632; CPR terminated</button>
       <div class="sep"></div>
-      <button class="abtn"   id="btnIO"   onclick="logEvent('IV / IO access obtained','note')" disabled>&#128568; IV / IO access</button>
+      <button class="abtn"   id="btnIO"   onclick="logEvent('IV / IO access obtained','note')" disabled>&#9679; IV / IO access</button>
     </div>
 
   </div>
@@ -356,14 +395,14 @@ body{display:flex;flex-direction:column;min-height:100vh}
   </div>
 
   <div class="bot-row">
-    <button class="bot-btn" onclick="doPrint()">&#128438; Print / Save PDF</button>
+    <button class="bot-btn" onclick="doPrint()">&#11123; Download report</button>
     <button class="bot-btn danger" onclick="confirmReset()">&#8634; Reset session</button>
   </div>
 
 </main>
 
 <footer class="footer">
-  <div class="footer-text">ReviveIQ v2.1 &nbsp;&#183;&nbsp; <span>HealthionX Medical Solutions</span> &nbsp;&#183;&nbsp; Dr. Muhammed Alif</div>
+  <div class="footer-text">ReviveIQ v2.2 &nbsp;&#183;&nbsp; <span>HealthionX Medical Solutions</span> &nbsp;&#183;&nbsp; Dr. Muhammed Alif</div>
 </footer>
 
 <!-- About -->
@@ -371,29 +410,31 @@ body{display:flex;flex-direction:column;min-height:100vh}
   <div class="modal">
     <button class="mclose" onclick="closeAbout()">&#10005;</button>
     <h2>ReviveIQ</h2>
-    <p style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.5rem">The Code Blue Assistant &nbsp;&#183;&nbsp; v2.1</p>
+    <p style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.5rem">The Code Blue Assistant &nbsp;&#183;&nbsp; v2.2</p>
     <div class="about-block">
       <strong>App developed by</strong><br/>
       Dr. Muhammed Alif<br/>
       Consultant Anaesthesiologist &amp; Intensivist<br/>
       Founder, HealthionX Medical Solutions
     </div>
-    <p>Real-time Code Blue monitoring for the Timer-Recorder in a High-Performance Resuscitation Team. Tracks shocks, rhythm checks, drugs, and Chest Compression Fraction (CCF) live.</p>
-    <p><strong style="color:var(--text)">CCF logic:</strong> Code Blue clock = denominator. Compression time only accumulates when "Start compressions" is pressed. CCF drops in real time when compressions are paused.</p>
+    <p><strong style="color:var(--text)">Pathway-aware (AHA 2025 ACLS):</strong> After each rhythm check, select Shockable or Non-shockable. The app then adjusts drug prompts and antiarrhythmic reminders accordingly.</p>
+    <p style="font-size:13px;color:var(--text2)"><strong style="color:var(--text)">Shockable (VF/pVT):</strong> Adrenaline every 4 min from shock #1. Amiodarone 300mg (or Lidocaine 1–1.5mg/kg) after shock #3. Amiodarone 150mg (or Lidocaine 0.5–0.75mg/kg) after shock #5.<br/><br/><strong style="color:var(--text)">Non-shockable (PEA/Asystole):</strong> Adrenaline ASAP, then every 4 min (alternate rhythm checks). No antiarrhythmic.</p>
     <div class="divider"></div>
-    <p style="font-size:12px;color:var(--text3)">Adrenaline: every 4 min (alternate rhythm checks). Rhythm check: every 2 min. CCF target: &#8805;80%. 15s advance warnings for all intervals. Based on AHA ACLS guidelines.</p>
+    <p style="font-size:12px;color:var(--text3)">CCF: Code Blue time = denominator. Compressions tracked only when "Start compressions" is pressed. AHA target &#8805;80%. 15s advance warnings for all intervals.</p>
+    <div class="divider"></div>
+    <p style="font-size:12px;color:var(--text3)"><strong style="color:var(--text2)">Saving the report:</strong> Tap "Download report" to save a .html file. On Android, open the file and use Share &rarr; Print to save as PDF. On iPhone, open in Safari and tap Share &rarr; Print &rarr; Pinch outward on preview to save as PDF.</p>
     <div class="divider"></div>
     <p style="font-size:12px;color:var(--text3)">&#9888; For trained medical professionals only. Always follow institutional protocols and team leader directives.</p>
     <button class="abtn" style="margin-top:0.5rem" onclick="closeAbout()">Close</button>
   </div>
 </div>
 
-<!-- Reset confirm -->
+<!-- Reset -->
 <div class="overlay" id="resetModal" onclick="if(event.target===this)closeReset()">
   <div class="modal">
     <button class="mclose" onclick="closeReset()">&#10005;</button>
     <h2>Reset session?</h2>
-    <p>All timers, counters, CCF data, and the event log will be cleared. This cannot be undone.</p>
+    <p>All timers, counters, pathway data, CCF, and the event log will be cleared. This cannot be undone.</p>
     <button class="abtn r" onclick="doReset()" style="margin-bottom:8px">Yes, reset everything</button>
     <button class="abtn" onclick="closeReset()">Cancel</button>
   </div>
@@ -401,47 +442,48 @@ body{display:flex;flex-direction:column;min-height:100vh}
 
 <script>
 // ── Constants ──────────────────────────────────────────────────
-const RHYTHM_INT = 120;
-const ADR_INT    = 240;
-const WARN       = 15;
+const RHYTHM_INT = 120;   // 2 min between rhythm checks
+const ADR_INT    = 240;   // 4 min adrenaline interval
+const WARN       = 15;    // 15 s advance warning
 
 // ── State ──────────────────────────────────────────────────────
 let codeRunning   = false;
 let compActive    = false;
-let elapsed       = 0;    // Code Blue total seconds — CCF denominator
-let compTime      = 0;    // banked compression seconds — CCF numerator
-let compStart     = null; // elapsed when current comp segment started
+let elapsed       = 0;      // Code Blue total seconds (CCF denominator)
+let compTime      = 0;      // banked compression seconds (CCF numerator)
+let compStart     = null;   // elapsed when current comp segment started
 let timerInterval = null;
 let startWallStr  = '';
 
+// Counters
 let shocks=0, drugs=0, rhythms=0;
+// Timers
 let lastShock=null, lastRhythm=null, lastAdr=null;
-let eventLog=[];
+
+// ── Pathway state ──────────────────────────────────────────────
+// null = not yet determined | 'shockable' | 'non-shockable'
+let pathway = null;
+// For shockable pathway: track antiarrhythmic doses given
+let amio300Given  = false;   // Amiodarone 300mg or Lidocaine 1st dose given
+let amio150Given  = false;   // Amiodarone 150mg or Lidocaine 2nd dose given
+// Keep amioGiven as alias for reset compatibility
+let amioGiven     = false;
+
+let eventLog = [];
 
 // ── Helpers ────────────────────────────────────────────────────
 function pad(n){ return String(n).padStart(2,'0'); }
 function fmt(s){ return pad(Math.floor(s/60))+':'+pad(s%60); }
 function wallNow(){ return new Date().toLocaleTimeString(); }
-
-function liveCompSec(){
-  return compTime + (compActive && compStart!==null ? (elapsed-compStart) : 0);
-}
-function liveCCF(){
-  if(elapsed===0) return 0;
-  return Math.round((liveCompSec()/elapsed)*100);
-}
-
-// CCF colour
-function ccfCol(pct){
-  if(pct>=80) return 'var(--green)';
-  if(pct>=60) return 'var(--amber)';
-  return 'var(--red)';
-}
+function liveCompSec(){ return compTime+(compActive&&compStart!==null?(elapsed-compStart):0); }
+function liveCCF(){ return elapsed===0?0:Math.round((liveCompSec()/elapsed)*100); }
+function ccfCol(p){ return p>=80?'var(--green)':p>=60?'var(--amber)':'var(--red)'; }
 
 // ── Code Blue toggle ───────────────────────────────────────────
 function toggleCodeBlue(){
   if(!codeRunning){
     codeRunning=true; elapsed=0; compTime=0; compStart=null; compActive=false;
+    pathway=null; amioPrompted=false; amioGiven=false; amio300Given=false; amio150Given=false;
     let now=new Date(); startWallStr='Started: '+now.toLocaleTimeString();
     timerInterval=setInterval(tick,1000);
     document.getElementById('startBtn').innerHTML='&#9632;&#160; END CODE BLUE';
@@ -450,6 +492,8 @@ function toggleCodeBlue(){
     document.getElementById('clock').classList.remove('warn');
     setEnabled(true);
     updateCompBtns('idle');
+    hidePathwayBar();
+    document.getElementById('amioAlert').classList.remove('show');
     addLog('&#128680; Code Blue started','cpr');
   } else {
     bankComp();
@@ -475,7 +519,6 @@ function startCompressions(){
   updateCompBtns('running');
   addLog('CPR started','cpr');
 }
-
 function stopCompressions(){
   if(!codeRunning||!compActive) return;
   bankComp();
@@ -485,7 +528,6 @@ function stopCompressions(){
   addLog('CPR paused | CCF: '+liveCCF()+'%','cpr');
   updateCCF();
 }
-
 function resumeCompressions(){
   if(!codeRunning||compActive) return;
   compActive=true; compStart=elapsed;
@@ -494,14 +536,9 @@ function resumeCompressions(){
   updateCompBtns('running');
   addLog('CPR resumed','cpr');
 }
-
 function bankComp(){
-  if(compActive&&compStart!==null){
-    compTime+=(elapsed-compStart);
-    compStart=null; compActive=false;
-  }
+  if(compActive&&compStart!==null){ compTime+=(elapsed-compStart); compStart=null; compActive=false; }
 }
-
 function updateCompBtns(state){
   let s=document.getElementById('btnCompStart');
   let p=document.getElementById('btnCompStop');
@@ -524,29 +561,133 @@ function tick(){
   updateCountdowns();
   checkReminders();
   updateCCF();
+  checkAmiodaroneAlert();
+}
+
+// ── Pathway management ─────────────────────────────────────────
+function setPathway(p){
+  pathway=p;
+  // When switching to non-shockable, reset adrenaline timer to ASAP
+  if(p==='non-shockable' && lastAdr===null){
+    // Trigger immediate adrenaline reminder
+    lastAdr=null;
+  }
+  showPathwayBar();
+  updateDrugHint();
+  addLog('Pathway set: '+pathwayLabel(p),'note');
+}
+
+function changePathway(){
+  // Toggle between shockable and non-shockable
+  if(pathway==='shockable') setPathway('non-shockable');
+  else setPathway('shockable');
+}
+
+function pathwayLabel(p){
+  if(p==='shockable')     return '⚡ Shockable — VF / pVT';
+  if(p==='non-shockable') return '〇 Non-shockable — PEA / Asystole';
+  return 'Unknown';
+}
+
+function showPathwayBar(){
+  let bar=document.getElementById('pathwayBar');
+  let lbl=document.getElementById('pathwayLabel');
+  let sub=document.getElementById('pathwaySub');
+  bar.className='pathway-bar show '+(pathway==='shockable'?'shock':'noshock');
+  lbl.textContent=pathwayLabel(pathway);
+  if(pathway==='shockable')
+    sub.textContent='Adrenaline every 4 min from shock #1 \u00b7 Amiodarone 300mg after shock #3 \u00b7 150mg after shock #5';
+  else
+    sub.textContent='Adrenaline ASAP then every 4 min · No antiarrhythmic';
+}
+
+function hidePathwayBar(){
+  document.getElementById('pathwayBar').className='pathway-bar';
+  document.getElementById('pathwayBar').classList.remove('show');
+}
+
+function updateDrugHint(){
+  let note=document.getElementById('amioNote');
+  if(pathway==='non-shockable'){
+    note.textContent='Non-shockable pathway: Adrenaline only. No antiarrhythmic.';
+    note.style.color='var(--teal)';
+  } else if(pathway==='shockable'){
+    if(!amio300Given && shocks<3)
+      note.textContent='Shockable: Adrenaline every 4 min. Amiodarone 300mg due after shock #3.';
+    else if(!amio300Given && shocks>=3)
+      note.textContent='Give Amiodarone 300mg IV now (1st dose). Adrenaline every 4 min.';
+    else if(amio300Given && !amio150Given && shocks<5)
+      note.textContent='Amiodarone 300mg given. 150mg 2nd dose due after shock #5. Adrenaline every 4 min.';
+    else if(amio300Given && !amio150Given && shocks>=5)
+      note.textContent='Give Amiodarone 150mg IV now (2nd dose). Adrenaline every 4 min.';
+    else
+      note.textContent='Both amiodarone doses given. Adrenaline every 4 min. Treat reversible causes.';
+    note.style.color='var(--amber)';
+  } else {
+    note.textContent='';
+  }
+}
+
+// ── Amiodarone / Lidocaine alert — AHA 2025 dose sequence ─────
+// Shock #3 → Amiodarone 300mg (1st dose) / Lidocaine 1–1.5 mg/kg
+// Shock #5 → Amiodarone 150mg (2nd dose) / Lidocaine 0.5–0.75 mg/kg
+// No further antiarrhythmic after 2 doses
+function checkAmiodaroneAlert(){
+  let alert=document.getElementById('amioAlert');
+  if(pathway!=='shockable'){ alert.classList.remove('show'); return; }
+  if(shocks>=3 && !amio300Given){
+    alert.classList.add('show');
+    alert.innerHTML='&#128138; After shock #3: <strong>Amiodarone 300mg IV</strong> (1st dose) &mdash; or Lidocaine 1&ndash;1.5 mg/kg IV';
+  } else if(shocks>=5 && amio300Given && !amio150Given){
+    alert.classList.add('show');
+    alert.innerHTML='&#128138; After shock #5: <strong>Amiodarone 150mg IV</strong> (2nd dose) &mdash; or Lidocaine 0.5&ndash;0.75 mg/kg IV';
+  } else {
+    alert.classList.remove('show');
+  }
 }
 
 // ── Countdowns ─────────────────────────────────────────────────
 function updateCountdowns(){
+  // Rhythm
   let rSince=lastRhythm!==null?elapsed-lastRhythm:elapsed;
   let rRem=RHYTHM_INT-rSince;
   let rEl=document.getElementById('nextRhythm');
   rEl.className='nxt'+(rRem<=0||rRem<=WARN?' w':'');
   rEl.innerHTML=rRem>0?'Next rhythm check in <b>'+rRem+'s</b>':'<b>Rhythm check due now!</b>';
 
-  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
-  let aRem=ADR_INT-aSince;
+  // Adrenaline — pathway-aware trigger
+  // No pathway yet: show nothing
+  // Non-shockable: timer runs from Code Blue start (ASAP)
+  // Shockable: timer only starts after shock #1
   let dEl=document.getElementById('nextDrug');
   let aEl=document.getElementById('adrAlert');
-  if(aRem>0){
-    dEl.className='nxt'+(aRem<=WARN?' w':'');
-    dEl.innerHTML='Adrenaline next in <b>'+aRem+'s</b> (~'+Math.ceil(aRem/60)+' min)';
-    aEl.textContent=aRem<=WARN?'Prepare adrenaline now!':'';
+
+  if(pathway===null){
+    // No rhythm check done yet — no adrenaline guidance
+    dEl.className='nxt'; dEl.innerHTML='';
+    aEl.textContent='';
+  } else if(pathway==='shockable' && lastShock===null){
+    // Shockable but no shock yet — adrenaline starts after first shock
+    dEl.className='nxt';
+    dEl.innerHTML='Give adrenaline <b>ASAP after first shock</b>';
+    aEl.textContent='';
   } else {
-    dEl.className='nxt w'; dEl.innerHTML='<b>Adrenaline due now!</b>';
-    aEl.textContent='Give adrenaline at this rhythm check';
+    // Timer is running: base = last adr given, or first shock time (shockable), or code start (non-shockable)
+    let base = lastAdr!==null ? lastAdr
+             : (pathway==='shockable' ? lastShock : 0);
+    let aSince = elapsed - base;
+    let aRem   = ADR_INT - aSince;
+    if(aRem>0){
+      dEl.className='nxt'+(aRem<=WARN?' w':'');
+      dEl.innerHTML='Adrenaline next in <b>'+aRem+'s</b> (~'+Math.ceil(aRem/60)+' min)';
+      aEl.textContent=aRem<=WARN?'Prepare adrenaline now!':'';
+    } else {
+      dEl.className='nxt w'; dEl.innerHTML='<b>Adrenaline due now!</b>';
+      aEl.textContent='Give adrenaline at this rhythm check';
+    }
   }
 
+  // Shock cycle
   if(lastShock!==null){
     let sSince=elapsed-lastShock, sRem=RHYTHM_INT-sSince;
     let sEl=document.getElementById('nextShock');
@@ -560,16 +701,47 @@ function checkReminders(){
   let bar=document.getElementById('reminderBar');
   let clk=document.getElementById('clock');
   if(!codeRunning){ bar.className='reminder'; clk.classList.remove('warn'); return; }
-  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
+
+  // Adrenaline — pathway-aware
+  // null pathway or shockable-before-first-shock → no adrenaline reminder
+  let adrActive = pathway!==null && !(pathway==='shockable' && lastShock===null);
+  let aSince = -999;
+  if(adrActive){
+    let base = lastAdr!==null ? lastAdr
+             : (pathway==='shockable' ? lastShock : 0);
+    aSince = elapsed - base;
+  }
+
   let rSince=lastRhythm!==null?elapsed-lastRhythm:elapsed;
   let sEl=lastShock!==null?elapsed-lastShock:null;
 
-  if(aSince>=ADR_INT)             { rb(bar,'ddue','💉 Adrenaline 1mg due — give at next rhythm check (4-min cycle)'); clk.classList.add('warn'); return; }
-  if(rSince>=RHYTHM_INT)           { rb(bar,'rdue','⏱ Rhythm check due — pause CPR for analysis'); clk.classList.add('warn'); return; }
-  if(sEl!==null&&sEl>=RHYTHM_INT)  { rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock'); clk.classList.add('warn'); return; }
-  if(aSince>=ADR_INT-WARN)         { rb(bar,'w15','⚠ Adrenaline due in '+(ADR_INT-aSince)+'s — prepare now'); clk.classList.add('warn'); return; }
-  if(rSince>=RHYTHM_INT-WARN)      { rb(bar,'w15','⚠ Rhythm check in '+(RHYTHM_INT-rSince)+'s — ready to pause'); clk.classList.add('warn'); return; }
-  if(sEl!==null&&sEl>=RHYTHM_INT-WARN){ rb(bar,'w15','⚠ Shock cycle check in '+(RHYTHM_INT-sEl)+'s'); clk.classList.add('warn'); return; }
+  // Due alerts (overdue)
+  if(adrActive && aSince>=ADR_INT){
+    rb(bar,'ddue','💉 Adrenaline 1mg due — give at next rhythm check (every 4 min)');
+    clk.classList.add('warn'); return;
+  }
+  if(rSince>=RHYTHM_INT){
+    rb(bar,'rdue','⏱ Rhythm check due — pause CPR for analysis');
+    clk.classList.add('warn'); return;
+  }
+  if(sEl!==null&&sEl>=RHYTHM_INT){
+    rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock');
+    clk.classList.add('warn'); return;
+  }
+
+  // 15-second warnings
+  if(adrActive && aSince>=(ADR_INT-WARN)){
+    rb(bar,'w15','⚠ Adrenaline due in '+(ADR_INT-aSince)+'s — prepare now');
+    clk.classList.add('warn'); return;
+  }
+  if(rSince>=(RHYTHM_INT-WARN)){
+    rb(bar,'w15','⚠ Rhythm check in '+(RHYTHM_INT-rSince)+'s — ready to pause');
+    clk.classList.add('warn'); return;
+  }
+  if(sEl!==null&&sEl>=(RHYTHM_INT-WARN)){
+    rb(bar,'w15','⚠ Shock cycle check in '+(RHYTHM_INT-sEl)+'s');
+    clk.classList.add('warn'); return;
+  }
   bar.className='reminder'; clk.classList.remove('warn');
 }
 function rb(bar,cls,msg){ bar.className='reminder on '+cls; bar.textContent=msg; }
@@ -577,8 +749,7 @@ function rb(bar,cls,msg){ bar.className='reminder on '+cls; bar.textContent=msg;
 // ── CCF display ────────────────────────────────────────────────
 function updateCCF(){
   if(elapsed===0) return;
-  let pct=liveCCF();
-  let col=ccfCol(pct);
+  let pct=liveCCF(); let col=ccfCol(pct);
   let msg=pct>=80?'Target met \u2265 80%':pct>=60?'Below target \u2014 minimise pauses':'Critical \u2014 resume compressions';
   document.getElementById('ccfTile').textContent=pct+'%';
   document.getElementById('ccfTile').style.color=col;
@@ -590,72 +761,144 @@ function updateCCF(){
   document.getElementById('ccfStatus').style.color=col;
 }
 
-// ── Action logs ────────────────────────────────────────────────
-function logShock(){
+// ── Shock ──────────────────────────────────────────────────────
+function logShock(){ debounced(_logShock); }
+function _logShock(){
   if(!codeRunning) return;
   let j=document.getElementById('jouleInput').value||200;
   shocks++; lastShock=elapsed;
   document.getElementById('shockCount').textContent=shocks;
-  addLog('Shock #'+shocks+' delivered \u2014 '+j+' J','shock');
+  let amioNote = '';
+  if(pathway==='shockable'){
+    if(shocks===3 && !amio300Given)           amioNote=' \u2014 Give Amiodarone 300mg IV (1st dose)';
+    else if(shocks===5 && amio300Given && !amio150Given) amioNote=' \u2014 Give Amiodarone 150mg IV (2nd dose)';
+  }
+  addLog('Shock #'+shocks+' delivered \u2014 '+j+' J'+amioNote,'shock');
   document.getElementById('nextShock').className='nxt';
   document.getElementById('nextShock').innerHTML='Next cycle in <b>120s</b>';
+  // For shockable pathway, start adrenaline timer from first shock if not yet started
+  if(pathway==='shockable' && shocks===1 && lastAdr===null){
+    document.getElementById('nextDrug').className='nxt';
+    document.getElementById('nextDrug').innerHTML='Adrenaline next in <b>240s</b> (4 min)';
+  }
+  checkAmiodaroneAlert();
+  if(pathway==='shockable') updateDrugHint();
+  // Visual feedback
+  let btn=document.getElementById('btnShock');
+  let orig=btn.innerHTML;
+  btn.innerHTML='&#10003; Shock logged!';
+  setTimeout(()=>{ btn.innerHTML=orig; },900);
 }
-
-function logRhythm(label){
+function logRhythm(result){
   if(!codeRunning) return;
+  let prevPathway = pathway;
+  pathway = result;
   rhythms++; lastRhythm=elapsed;
   document.getElementById('rhythmCount').textContent=rhythms;
-  let aSince=lastAdr!==null?elapsed-lastAdr:elapsed;
-  let aNote=aSince>=ADR_INT?' \u2605 Adrenaline due \u2014 give now':'';
+
+  // For non-shockable: if this is the first time we set the pathway, mark adrenaline
+  // as starting NOW (ASAP) — set lastAdrBase so timer counts from here if never given
+  if(pathway==='non-shockable' && prevPathway!=='non-shockable' && lastAdr===null){
+    // Don't set lastAdr (that's for given doses), but we now have a known start reference = 0 (code start)
+    // The base in updateCountdowns already uses elapsed=0 for non-shockable when lastAdr===null, which is correct
+  }
+
+  // Adrenaline note on rhythm check entry
+  let aNote = '';
+  if(pathway==='non-shockable'){
+    let base = lastAdr!==null ? lastAdr : 0;
+    let aSince = elapsed - base;
+    if(aSince >= ADR_INT) aNote = ' \u2605 Adrenaline due \u2014 give now';
+  } else if(pathway==='shockable' && lastShock!==null){
+    let base = lastAdr!==null ? lastAdr : lastShock;
+    let aSince = elapsed - base;
+    if(aSince >= ADR_INT) aNote = ' \u2605 Adrenaline due \u2014 give now';
+  }
+
+  let label = result==='shockable' ? 'Shockable (VF / pVT)' : 'Non-shockable (PEA / Asystole)';
   addLog('Rhythm check #'+rhythms+': '+label+aNote,'rhythm');
+
   document.getElementById('nextRhythm').className='nxt';
   document.getElementById('nextRhythm').innerHTML='Next check in <b>120s</b>';
+
+  showPathwayBar();
+  updateDrugHint();
+  // Only log pathway change note if it actually changed
+  if(prevPathway!==null && prevPathway!==pathway)
+    addLog('&#9888; Pathway changed to: '+pathwayLabel(pathway),'note');
+  checkAmiodaroneAlert();
 }
 
+// ── Debounce guard ─────────────────────────────────────────────
+let lastActionTime = 0;
+function debounced(fn){
+  let now = Date.now();
+  if(now - lastActionTime < 800) return; // 800ms guard between any log action
+  lastActionTime = now;
+  fn();
+}
+
+// ── Drug ───────────────────────────────────────────────────────
 function onDrugChange(){
   let v=document.getElementById('drugSelect').value;
   document.getElementById('customRow').className=v==='other'?'custom-row show':'custom-row';
 }
-
-function logDrug(){
+function logDrug(){ debounced(_logDrug); }
+function _logDrug(){
   if(!codeRunning) return;
   let sel=document.getElementById('drugSelect');
   let d=sel.value==='other'?document.getElementById('customDrug').value.trim():sel.value;
   if(!d){ document.getElementById('customDrug').focus(); return; }
   drugs++; document.getElementById('drugCount').textContent=drugs;
-  if(d.toLowerCase().includes('adrenaline')){
+  let dl=d.toLowerCase();
+  if(dl.includes('adrenaline')){
     lastAdr=elapsed;
     document.getElementById('nextDrug').className='nxt';
     document.getElementById('nextDrug').innerHTML='Adrenaline next in <b>240s</b> (4 min)';
     document.getElementById('adrAlert').textContent='';
   }
+  // Mark antiarrhythmic as given — dismiss alert and advance dose state
+  if(dl.includes('amiodarone')||dl.includes('lidocaine')){
+    if(!amio300Given){
+      amio300Given=true;
+    } else if(!amio150Given){
+      amio150Given=true;
+    }
+    amioGiven=true;
+    checkAmiodaroneAlert(); // re-check in case next dose threshold already reached
+    document.getElementById('amioNote').textContent='';
+  }
   addLog(d,'drug');
+  // Visual feedback — briefly show "✓ Logged" on button to confirm tap
+  let btn=document.getElementById('btnDrug');
+  let orig=btn.innerHTML;
+  btn.innerHTML='&#10003; Logged!';
+  btn.style.borderColor='var(--green)';
+  btn.style.color='var(--green)';
+  setTimeout(()=>{ btn.innerHTML=orig; btn.style.borderColor=''; btn.style.color=''; },900);
 }
 
+// ── ROSC / Terminated ──────────────────────────────────────────
 function logROSC(){
   if(!codeRunning) return;
   bankComp();
   addLog('\u2713 ROSC achieved | CPR time: '+fmt(elapsed)+' | Final CCF: '+liveCCF()+'%','rosc');
   toggleCodeBlue();
 }
-
 function logTerminated(){
   if(!codeRunning) return;
   bankComp();
   addLog('\u25a0 CPR terminated | Total time: '+fmt(elapsed)+' | Final CCF: '+liveCCF()+'%','term');
   toggleCodeBlue();
 }
-
 function logEvent(label,type){ if(!codeRunning) return; addLog(label,type); }
 
 // ── Event log ──────────────────────────────────────────────────
-// CCF is stored with each entry and shown inline in event text as a tag
 function addLog(text,type){
   let pct=elapsed>0?liveCCF():null;
   eventLog.unshift({ct:fmt(elapsed), wt:wallNow(), text, type, pct});
   renderLog();
 }
-
 function renderLog(){
   let el=document.getElementById('logList');
   document.getElementById('logCount').textContent=eventLog.length+' event'+(eventLog.length!==1?'s':'');
@@ -666,7 +909,6 @@ function renderLog(){
   const B={shock:'bshock',drug:'bdrug',rhythm:'brhythm',cpr:'bcpr',rosc:'brosc',term:'bterm',note:'bnote'};
   const L={shock:'SHOCK',drug:'DRUG',rhythm:'RHYTHM',cpr:'CPR',rosc:'ROSC',term:'TERM',note:'NOTE'};
   el.innerHTML=eventLog.map(e=>{
-    // CCF inline tag — coloured, appended after event text
     let ccfTag='';
     if(e.pct!==null){
       let col=ccfCol(e.pct);
@@ -681,13 +923,113 @@ function renderLog(){
   }).join('');
 }
 
-// ── Print ──────────────────────────────────────────────────────
+// ── Print — opens a clean standalone print window ──────────────
 function doPrint(){
-  document.getElementById('printTime').textContent='Printed: '+new Date().toLocaleString();
-  window.print();
+  const now = new Date().toLocaleString();
+  const B={shock:'bshock',drug:'bdrug',rhythm:'brhythm',cpr:'bcpr',rosc:'brosc',term:'bterm',note:'bnote'};
+  const L={shock:'SHOCK',drug:'DRUG',rhythm:'RHYTHM',cpr:'CPR',rosc:'ROSC',term:'TERM',note:'NOTE'};
+
+  // Build log rows — eventLog is newest-first, reverse for print (oldest first)
+  const rows = [...eventLog].reverse().map((e,i)=>{
+    let ccf = e.pct!==null ? e.pct+'%' : '—';
+    let badge = L[e.type]||'NOTE';
+    return `<tr class="${i%2===0?'even':'odd'}">
+      <td class="td-num">${e.ct}</td>
+      <td class="td-wall">${e.wt}</td>
+      <td class="td-ccf">${ccf}</td>
+      <td class="td-badge"><span class="badge badge-${e.type||'note'}">${badge}</span></td>
+      <td class="td-event">${e.text}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>ReviveIQ — Code Blue Report</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#000;background:#fff;padding:20px}
+h1{font-size:18px;font-weight:700;margin-bottom:3px}
+.subtitle{font-size:11px;color:#555;margin-bottom:14px}
+.summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:10px 12px;border:1px solid #ccc;border-radius:4px;background:#f9f9f9}
+.summary-item{min-width:100px}
+.summary-item .val{font-size:16px;font-weight:700;color:#000}
+.summary-item .lbl{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+colgroup col.c-elapsed{width:60px}
+colgroup col.c-clock{width:80px}
+colgroup col.c-ccf{width:44px}
+colgroup col.c-type{width:62px}
+colgroup col.c-event{width:auto}
+thead tr{background:#222;color:#fff}
+thead th{padding:6px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+tbody tr.even{background:#fff}
+tbody tr.odd{background:#f5f5f5}
+td{padding:5px 8px;vertical-align:top;border-bottom:1px solid #e8e8e8;word-break:break-word}
+.td-num{font-family:'Courier New',monospace;font-size:12px;font-weight:600;white-space:nowrap}
+.td-wall{font-family:'Courier New',monospace;font-size:10px;color:#555;white-space:nowrap}
+.td-ccf{font-family:'Courier New',monospace;font-size:11px;font-weight:600;text-align:center}
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
+.badge-shock{background:#ffd6d6;color:#8b0000;border:1px solid #e09090}
+.badge-drug{background:#ede9fe;color:#4c1d95;border:1px solid #c4b5fd}
+.badge-rhythm{background:#fef3c7;color:#78350f;border:1px solid #fcd34d}
+.badge-cpr{background:#d1fae5;color:#064e3b;border:1px solid #6ee7b7}
+.badge-rosc{background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd}
+.badge-term{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+.badge-note{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.td-event{font-size:11px;line-height:1.5}
+@media print{
+  body{padding:10px}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<h1>ReviveIQ — The Code Blue Assistant</h1>
+<div class="subtitle">Printed: ${now} &nbsp;|&nbsp; v2.2 &nbsp;|&nbsp; Dr. Muhammed Alif &nbsp;|&nbsp; HealthionX Medical Solutions</div>
+<div class="summary">
+  <div class="summary-item"><div class="val">${fmt(elapsed)}</div><div class="lbl">Total code time</div></div>
+  <div class="summary-item"><div class="val">${fmt(liveCompSec())}</div><div class="lbl">Compression time</div></div>
+  <div class="summary-item"><div class="val">${liveCCF()}%</div><div class="lbl">Final CCF</div></div>
+  <div class="summary-item"><div class="val">${shocks}</div><div class="lbl">Shocks delivered</div></div>
+  <div class="summary-item"><div class="val">${drugs}</div><div class="lbl">Drug doses</div></div>
+  <div class="summary-item"><div class="val">${rhythms}</div><div class="lbl">Rhythm checks</div></div>
+  <div class="summary-item"><div class="val">${eventLog.length}</div><div class="lbl">Total events</div></div>
+  <div class="summary-item"><div class="val">${pathway?pathwayLabel(pathway).replace(/[⚡〇]/g,'').trim():'—'}</div><div class="lbl">Final pathway</div></div>
+</div>
+<table>
+<colgroup>
+  <col class="c-elapsed"/><col class="c-clock"/><col class="c-ccf"/><col class="c-type"/><col class="c-event"/>
+</colgroup>
+<thead>
+  <tr><th>Elapsed</th><th>Clock</th><th>CCF</th><th>Type</th><th>Event</th></tr>
+</thead>
+<tbody>${rows}</tbody>
+</table>
+</body>
+</html>`;
+
+  // Generate a Blob and download as .html — works on both desktop and mobile PWA.
+  // On mobile: opens in browser where user can use Share > Print / Save to Files.
+  // On desktop: downloads the file which can be opened and printed.
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const now2 = new Date();
+  const dd   = String(now2.getDate()).padStart(2,'0');
+  const mm   = String(now2.getMonth()+1).padStart(2,'0');
+  const yyyy = now2.getFullYear();
+  const hh   = String(now2.getHours()).padStart(2,'0');
+  const min  = String(now2.getMinutes()).padStart(2,'0');
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = dd+'-'+mm+'-'+yyyy+'_'+hh+min+'.html';
+  a.click();
+  setTimeout(()=> URL.revokeObjectURL(url), 5000);
 }
 
-// ── Enable/disable buttons ─────────────────────────────────────
+// ── Enable / disable ───────────────────────────────────────────
 function setEnabled(on){
   ['btnShock','btnR1','btnR2','btnDrug','btnCompStart','btnCompStop','btnCompResume',
    'btnROSC','btnTerm','btnIO'].forEach(id=>{
@@ -707,8 +1049,10 @@ function doReset(){
   elapsed=0; compTime=0; compStart=null;
   shocks=0; drugs=0; rhythms=0;
   lastShock=null; lastRhythm=null; lastAdr=null;
+  pathway=null; amioPrompted=false; amioGiven=false; amio300Given=false; amio150Given=false;
   startWallStr=''; eventLog=[];
   clearInterval(timerInterval);
+
   document.getElementById('clock').textContent='00:00';
   document.getElementById('clock').classList.remove('running','warn');
   document.getElementById('wallclock').innerHTML='&nbsp;';
@@ -721,18 +1065,24 @@ function doReset(){
   document.getElementById('shockCount').textContent='0';
   document.getElementById('drugCount').textContent='0';
   document.getElementById('rhythmCount').textContent='0';
+
   let t=document.getElementById('ccfTile'),p=document.getElementById('ccfPct');
-  t.textContent='&#8212;'; t.style.color='var(--green)';
-  p.textContent='&#8212;'; p.style.color='var(--green)';
+  t.textContent='\u2014'; t.style.color='var(--green)';
+  p.textContent='\u2014'; p.style.color='var(--green)';
   document.getElementById('ccfBar').style.width='0%';
   document.getElementById('ccfBar').style.background='var(--green)';
   document.getElementById('ccfStatus').textContent='Start Code Blue to begin tracking';
   document.getElementById('ccfStatus').style.color='var(--text3)';
   document.getElementById('ccfDot').classList.remove('live');
+
   document.getElementById('nextShock').textContent='';
   document.getElementById('nextRhythm').textContent='';
   document.getElementById('nextDrug').textContent='';
   document.getElementById('adrAlert').textContent='';
+  document.getElementById('amioNote').textContent='';
+  document.getElementById('amioAlert').classList.remove('show');
+  hidePathwayBar();
+
   document.getElementById('customRow').className='custom-row';
   document.getElementById('customDrug').value='';
   document.getElementById('drugSelect').selectedIndex=0;
