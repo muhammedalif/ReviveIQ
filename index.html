@@ -483,6 +483,8 @@ let startWallStr  = '';
 let shocks=0, drugs=0, rhythms=0;
 // Timers
 let lastShock=null, lastRhythm=null, lastAdr=null;
+let lastRhythmResult = null;   // 'shockable' | 'non-shockable' — result of most recent rhythm check
+let rhythmVoiceSpoken = false; // have we spoken the post-rhythm-check one-time voice?
 
 // ── Pathway state ──────────────────────────────────────────────
 // null = not yet determined | 'shockable' | 'non-shockable'
@@ -781,12 +783,18 @@ function updateCountdowns(){
     }
   }
 
-  // Shock cycle
-  if(lastShock!==null){
+  // Shock cycle countdown — only shown in shockable pathway
+  let sEl2 = document.getElementById('nextShock');
+  if(lastShock!==null && pathway==='shockable'){
     let sSince=elapsed-lastShock, sRem=RHYTHM_INT-sSince;
-    let sEl=document.getElementById('nextShock');
-    sEl.className='nxt'+(sRem<=0||sRem<=WARN?' w':'');
-    sEl.innerHTML=sRem>0?'Next shock cycle in <b>'+sRem+'s</b>':'<b>Shock cycle due!</b>';
+    sEl2.className='nxt'+(sRem<=0||sRem<=WARN?' w':'');
+    sEl2.innerHTML=sRem>0?'Next shock cycle in <b>'+sRem+'s</b>':'<b>Shock cycle due!</b>';
+  } else if(pathway==='non-shockable'){
+    sEl2.className='nxt'; sEl2.innerHTML='';  // clear shock countdown — not applicable
+  } else if(lastShock!==null){
+    let sSince=elapsed-lastShock, sRem=RHYTHM_INT-sSince;
+    sEl2.className='nxt'+(sRem<=0||sRem<=WARN?' w':'');
+    sEl2.innerHTML=sRem>0?'Next shock cycle in <b>'+sRem+'s</b>':'<b>Shock cycle due!</b>';
   }
 }
 
@@ -820,7 +828,8 @@ function checkReminders(){
       'Rhythm check due. Pause CPR for analysis.');
     clk.classList.add('warn'); return;
   }
-  if(sEl!==null&&sEl>=RHYTHM_INT){
+  // Shock cycle — only shown/voiced in shockable pathway
+  if(pathway==='shockable' && sEl!==null && sEl>=RHYTHM_INT){
     rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock',
       '2 minute CPR complete. Rhythm check and consider shock.');
     clk.classList.add('warn'); return;
@@ -835,7 +844,8 @@ function checkReminders(){
     rb(bar,'w15','⚠ Rhythm check in '+(RHYTHM_INT-rSince)+'s — ready to pause');
     clk.classList.add('warn'); return;
   }
-  if(sEl!==null&&sEl>=(RHYTHM_INT-WARN)){
+  // Shock cycle 15s warning — shockable only
+  if(pathway==='shockable' && sEl!==null && sEl>=(RHYTHM_INT-WARN)){
     rb(bar,'w15','⚠ Shock cycle check in '+(RHYTHM_INT-sEl)+'s');
     clk.classList.add('warn'); return;
   }
@@ -895,6 +905,8 @@ function logRhythm(result){
   let prevPathway = pathway;
   pathway = result;
   rhythms++; lastRhythm=elapsed;
+  lastRhythmResult = result;      // track for voice & shock reminder logic
+  rhythmVoiceSpoken = false;      // reset — allow one-time voice for this new rhythm check
   document.getElementById('rhythmCount').textContent=rhythms;
 
   // For non-shockable: if this is the first time we set the pathway, mark adrenaline
@@ -918,6 +930,14 @@ function logRhythm(result){
 
   let label = result==='shockable' ? 'Shockable (VF / pVT)' : 'Non-shockable (PEA / Asystole)';
   addLog('Rhythm check #'+rhythms+': '+label+aNote,'rhythm');
+
+  // One-time voice prompt for rhythm result
+  if(result==='shockable'){
+    speak('Shockable rhythm. Shock advised. Resume CPR immediately after shock.');
+  } else {
+    speak('Non-shockable rhythm. No shock. Continue CPR and give adrenaline.');
+  }
+  rhythmVoiceSpoken = true;
 
   document.getElementById('nextRhythm').className='nxt';
   document.getElementById('nextRhythm').innerHTML='Next check in <b>120s</b>';
@@ -1150,6 +1170,7 @@ function doReset(){
   elapsed=0; compTime=0; compStart=null;
   shocks=0; drugs=0; rhythms=0;
   lastShock=null; lastRhythm=null; lastAdr=null;
+  lastRhythmResult=null; rhythmVoiceSpoken=false;
   pathway=null; amioPrompted=false; amioGiven=false; amio300Given=false; amio150Given=false;
   startWallStr=''; eventLog=[];
   clearInterval(timerInterval);
