@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reviveiq-v22';
+const CACHE_NAME = 'reviveiq-v30';
 const ASSETS = [
   '.',
   './index.html',

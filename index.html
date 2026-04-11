@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="theme-color" content="#0a1628"/>
-<meta name="description" content="ReviveIQ v2.2 — The Code Blue Assistant. Pathway-aware ACLS CPR monitor with real-time CCF tracking."/>
+<meta name="description" content="ReviveIQ v3.0 — The Code Blue Assistant. Pathway-aware ACLS CPR monitor with real-time CCF tracking."/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="ReviveIQ"/>
@@ -37,6 +37,16 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .logo-sub{font-size:10px;color:var(--accent);letter-spacing:1.2px;font-weight:500;text-transform:uppercase;margin-top:2px}
 .hbtn{padding:6px 11px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--body);font-size:13px;cursor:pointer;transition:all 0.15s}
 .hbtn:hover{background:var(--surface2);color:var(--text)}
+
+/* VOICE CONTROLS */
+.header-controls{display:flex;align-items:center;gap:8px}
+.voice-ctrl{display:flex;align-items:center;gap:6px}
+.voice-btn{display:flex;align-items:center;justify-content:center;padding:6px 8px;color:var(--teal);border-color:rgba(0,212,170,0.4)}
+.voice-btn.muted{color:var(--text3);border-color:var(--border2)}
+.voice-btn.muted svg path,.voice-btn.muted svg polygon{stroke:var(--text3)}
+.vol-slider{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:var(--border2);border-radius:2px;outline:none;cursor:pointer;accent-color:var(--teal)}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--teal);cursor:pointer}
+.vol-slider.hidden{display:none}
 
 .main{flex:1;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:0.875rem;max-width:800px;margin:0 auto;width:100%}
 
@@ -263,7 +273,19 @@ body{display:flex;flex-direction:column;min-height:100vh}
       <div class="logo-sub">The Code Blue Assistant</div>
     </div>
   </div>
-  <button class="hbtn" onclick="openAbout()">About</button>
+  <div class="header-controls">
+    <div class="voice-ctrl" id="voiceCtrl">
+      <button class="hbtn voice-btn" id="voiceToggle" onclick="toggleVoice()" title="Toggle voice alerts">
+        <svg id="voiceIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+          <polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </button>
+      <input type="range" id="volSlider" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)" title="Volume"/>
+    </div>
+    <button class="hbtn" onclick="openAbout()">About</button>
+  </div>
 </header>
 
 <main class="main">
@@ -322,50 +344,6 @@ body{display:flex;flex-direction:column;min-height:100vh}
 
   <div class="panels">
 
-    <!-- Defibrillation -->
-    <div class="panel">
-      <div class="ptitle red">Defibrillation</div>
-      <div class="joule-row">
-        <input type="number" id="jouleInput" value="200" min="1" max="360"/>
-        <span>Joules</span>
-      </div>
-      <button class="abtn r" id="btnShock" onclick="logShock()" disabled>&#9889; Log shock delivered</button>
-      <div class="nxt" id="nextShock"></div>
-    </div>
-
-    <!-- Rhythm check — with pathway selector -->
-    <div class="panel">
-      <div class="ptitle teal">Rhythm check</div>
-      <button class="abtn t" id="btnR1" onclick="logRhythm('non-shockable')" disabled>Non-shockable &#8212; PEA / Asystole</button>
-      <button class="abtn t" id="btnR2" onclick="logRhythm('shockable')"     disabled>Shockable &#8212; VF / pVT</button>
-      <div class="nxt" id="nextRhythm"></div>
-      <div class="adralert" id="adrAlert"></div>
-    </div>
-
-    <!-- Drugs — pathway-aware label -->
-    <div class="panel">
-      <div class="ptitle purple">Drugs</div>
-      <select class="dselect" id="drugSelect" onchange="onDrugChange()">
-        <option>Adrenaline 1mg IV</option>
-        <option>Amiodarone 300mg IV</option>
-        <option>Amiodarone 150mg IV</option>
-        <option>Atropine 0.6mg IV</option>
-        <option>Calcium gluconate 10ml IV</option>
-        <option>Magnesium sulphate 2g IV</option>
-        <option>Sodium bicarbonate 50ml IV</option>
-        <option>Lidocaine 100mg IV</option>
-        <option>Lidocaine 50mg IV (2nd dose)</option>
-        <option>Dextrose 50% 50ml IV</option>
-        <option value="other">Other (specify)</option>
-      </select>
-      <div class="custom-row" id="customRow">
-        <input type="text" id="customDrug" placeholder="Enter drug name &amp; dose…" maxlength="60"/>
-      </div>
-      <button class="abtn p" id="btnDrug" onclick="logDrug()" disabled>&#128137; Log drug given</button>
-      <div class="nxt" id="nextDrug"></div>
-      <div class="adralert" id="amioNote" style="color:var(--teal)"></div>
-    </div>
-
     <!-- Events -->
     <div class="panel">
       <div class="ptitle blue">Events</div>
@@ -377,6 +355,52 @@ body{display:flex;flex-direction:column;min-height:100vh}
       <button class="abtn r" id="btnTerm" onclick="logTerminated()" disabled>&#9632; CPR terminated</button>
       <div class="sep"></div>
       <button class="abtn"   id="btnIO"   onclick="logEvent('IV / IO access obtained','note')" disabled>&#9679; IV / IO access</button>
+    </div>
+
+    <!-- Rhythm check -->
+    <div class="panel">
+      <div class="ptitle teal">Rhythm check</div>
+      <button class="abtn t" id="btnR1" onclick="logRhythm('non-shockable')" disabled>Non-shockable &#8212; PEA / Asystole</button>
+      <button class="abtn t" id="btnR2" onclick="logRhythm('shockable')"     disabled>Shockable &#8212; VF / pVT</button>
+      <div class="nxt" id="nextRhythm"></div>
+      <div class="adralert" id="adrAlert"></div>
+      <div class="sep"></div>
+      <!-- Defibrillation nested below rhythm check -->
+      <div class="ptitle red" style="margin-top:2px">Defibrillation</div>
+      <div class="joule-row">
+        <input type="number" id="jouleInput" value="200" min="1" max="360"/>
+        <span>Joules</span>
+      </div>
+      <button class="abtn r" id="btnShock" onclick="logShock()" disabled>&#9889; Log shock delivered</button>
+      <div class="nxt" id="nextShock"></div>
+    </div>
+
+    <!-- Drugs — full width -->
+    <div class="panel" style="grid-column:1/-1">
+      <div class="ptitle purple">Drugs</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start">
+        <div>
+          <select class="dselect" id="drugSelect" onchange="onDrugChange()">
+            <option>Adrenaline 1mg IV</option>
+            <option>Amiodarone 300mg IV</option>
+            <option>Amiodarone 150mg IV</option>
+            <option>Atropine 0.6mg IV</option>
+            <option>Calcium gluconate 10ml IV</option>
+            <option>Magnesium sulphate 2g IV</option>
+            <option>Sodium bicarbonate 50ml IV</option>
+            <option>Lidocaine 100mg IV</option>
+            <option>Lidocaine 50mg IV (2nd dose)</option>
+            <option>Dextrose 50% 50ml IV</option>
+            <option value="other">Other (specify)</option>
+          </select>
+          <div class="custom-row" id="customRow">
+            <input type="text" id="customDrug" placeholder="Enter drug name &amp; dose…" maxlength="60"/>
+          </div>
+        </div>
+        <button class="abtn p" id="btnDrug" onclick="logDrug()" disabled style="margin-bottom:0;white-space:nowrap;width:auto;padding:9px 16px">&#128137; Log drug</button>
+      </div>
+      <div class="nxt" id="nextDrug"></div>
+      <div class="adralert" id="amioNote" style="color:var(--teal)"></div>
     </div>
 
   </div>
@@ -402,7 +426,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 </main>
 
 <footer class="footer">
-  <div class="footer-text">ReviveIQ v2.2 &nbsp;&#183;&nbsp; <span>HealthionX Medical Solutions</span> &nbsp;&#183;&nbsp; Dr. Muhammed Alif</div>
+  <div class="footer-text">ReviveIQ v3.0 &nbsp;&#183;&nbsp; <span>HealthionX Medical Solutions</span> &nbsp;&#183;&nbsp; Dr. Muhammed Alif</div>
 </footer>
 
 <!-- About -->
@@ -410,7 +434,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
   <div class="modal">
     <button class="mclose" onclick="closeAbout()">&#10005;</button>
     <h2>ReviveIQ</h2>
-    <p style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.5rem">The Code Blue Assistant &nbsp;&#183;&nbsp; v2.2</p>
+    <p style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:0.5rem">The Code Blue Assistant &nbsp;&#183;&nbsp; v3.0</p>
     <div class="about-block">
       <strong>App developed by</strong><br/>
       Dr. Muhammed Alif<br/>
@@ -478,6 +502,70 @@ function wallNow(){ return new Date().toLocaleTimeString(); }
 function liveCompSec(){ return compTime+(compActive&&compStart!==null?(elapsed-compStart):0); }
 function liveCCF(){ return elapsed===0?0:Math.round((liveCompSec()/elapsed)*100); }
 function ccfCol(p){ return p>=80?'var(--green)':p>=60?'var(--amber)':'var(--red)'; }
+
+// ── Voice engine ───────────────────────────────────────────────
+// Preferences persisted in localStorage
+let voiceOn  = localStorage.getItem('riq_voice') !== 'off';  // default ON
+let voiceVol = parseFloat(localStorage.getItem('riq_vol') || '1');
+let lastSpoken = '';     // last message spoken — avoid repeating same alert every second
+let lastSpokenAt = 0;   // elapsed second when last spoken
+
+function initVoiceUI(){
+  document.getElementById('volSlider').value = voiceVol;
+  updateVoiceBtn();
+}
+
+function updateVoiceBtn(){
+  let btn = document.getElementById('voiceToggle');
+  let slider = document.getElementById('volSlider');
+  if(voiceOn){
+    btn.classList.remove('muted');
+    btn.title = 'Voice on — tap to mute';
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>`;
+    slider.classList.remove('hidden');
+  } else {
+    btn.classList.add('muted');
+    btn.title = 'Voice muted — tap to unmute';
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5"/>
+      <line x1="23" y1="9" x2="17" y2="15"/>
+      <line x1="17" y1="9" x2="23" y2="15"/>
+    </svg>`;
+    slider.classList.add('hidden');
+  }
+}
+
+function toggleVoice(){
+  voiceOn = !voiceOn;
+  localStorage.setItem('riq_voice', voiceOn ? 'on' : 'off');
+  updateVoiceBtn();
+  if(voiceOn) speak('Voice alerts on');
+  else window.speechSynthesis.cancel();
+}
+
+function setVolume(v){
+  voiceVol = parseFloat(v);
+  localStorage.setItem('riq_vol', voiceVol);
+}
+
+function speak(text){
+  if(!voiceOn) return;
+  if(!window.speechSynthesis) return;
+  // Don't repeat the exact same message within 8 seconds
+  if(text === lastSpoken && (elapsed - lastSpokenAt) < 8) return;
+  lastSpoken = text;
+  lastSpokenAt = elapsed;
+  window.speechSynthesis.cancel();  // clear any queued speech
+  let u = new SpeechSynthesisUtterance(text);
+  u.volume = voiceVol;
+  u.rate   = 1.05;
+  u.pitch  = 1.0;
+  window.speechSynthesis.speak(u);
+}
 
 // ── Code Blue toggle ───────────────────────────────────────────
 function toggleCodeBlue(){
@@ -636,11 +724,17 @@ function checkAmiodaroneAlert(){
   let alert=document.getElementById('amioAlert');
   if(pathway!=='shockable'){ alert.classList.remove('show'); return; }
   if(shocks>=3 && !amio300Given){
-    alert.classList.add('show');
-    alert.innerHTML='&#128138; After shock #3: <strong>Amiodarone 300mg IV</strong> (1st dose) &mdash; or Lidocaine 1&ndash;1.5 mg/kg IV';
+    if(!alert.classList.contains('show')){
+      alert.classList.add('show');
+      alert.innerHTML='&#128138; After shock #3: <strong>Amiodarone 300mg IV</strong> (1st dose) &mdash; or Lidocaine 1&ndash;1.5 mg/kg IV';
+      speak('Amiodarone 300 milligrams due after shock 3. Or Lidocaine.');
+    }
   } else if(shocks>=5 && amio300Given && !amio150Given){
-    alert.classList.add('show');
-    alert.innerHTML='&#128138; After shock #5: <strong>Amiodarone 150mg IV</strong> (2nd dose) &mdash; or Lidocaine 0.5&ndash;0.75 mg/kg IV';
+    if(!alert.classList.contains('show')){
+      alert.classList.add('show');
+      alert.innerHTML='&#128138; After shock #5: <strong>Amiodarone 150mg IV</strong> (2nd dose) &mdash; or Lidocaine 0.5&ndash;0.75 mg/kg IV';
+      speak('Amiodarone 150 milligrams due after shock 5. Second dose.');
+    }
   } else {
     alert.classList.remove('show');
   }
@@ -717,19 +811,22 @@ function checkReminders(){
 
   // Due alerts (overdue)
   if(adrActive && aSince>=ADR_INT){
-    rb(bar,'ddue','💉 Adrenaline 1mg due — give at next rhythm check (every 4 min)');
+    rb(bar,'ddue','💉 Adrenaline 1mg due — give at next rhythm check (every 4 min)',
+      'Adrenaline due. Give 1 milligram at next rhythm check.');
     clk.classList.add('warn'); return;
   }
   if(rSince>=RHYTHM_INT){
-    rb(bar,'rdue','⏱ Rhythm check due — pause CPR for analysis');
+    rb(bar,'rdue','⏱ Rhythm check due — pause CPR for analysis',
+      'Rhythm check due. Pause CPR for analysis.');
     clk.classList.add('warn'); return;
   }
   if(sEl!==null&&sEl>=RHYTHM_INT){
-    rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock');
+    rb(bar,'sdue','⚡ 2-min CPR complete — rhythm check + consider shock',
+      '2 minute CPR complete. Rhythm check and consider shock.');
     clk.classList.add('warn'); return;
   }
 
-  // 15-second warnings
+  // 15-second warnings — visual only, no voice
   if(adrActive && aSince>=(ADR_INT-WARN)){
     rb(bar,'w15','⚠ Adrenaline due in '+(ADR_INT-aSince)+'s — prepare now');
     clk.classList.add('warn'); return;
@@ -744,7 +841,11 @@ function checkReminders(){
   }
   bar.className='reminder'; clk.classList.remove('warn');
 }
-function rb(bar,cls,msg){ bar.className='reminder on '+cls; bar.textContent=msg; }
+function rb(bar,cls,msg,voice){
+  bar.className='reminder on '+cls;
+  bar.textContent=msg;
+  if(voice) speak(voice);
+}
 
 // ── CCF display ────────────────────────────────────────────────
 function updateCCF(){
@@ -988,7 +1089,7 @@ td{padding:5px 8px;vertical-align:top;border-bottom:1px solid #e8e8e8;word-break
 </head>
 <body>
 <h1>ReviveIQ — The Code Blue Assistant</h1>
-<div class="subtitle">Printed: ${now} &nbsp;|&nbsp; v2.2 &nbsp;|&nbsp; Dr. Muhammed Alif &nbsp;|&nbsp; HealthionX Medical Solutions</div>
+<div class="subtitle">Printed: ${now} &nbsp;|&nbsp; v3.0 &nbsp;|&nbsp; HealthionX Medical Solutions</div>
 <div class="summary">
   <div class="summary-item"><div class="val">${fmt(elapsed)}</div><div class="lbl">Total code time</div></div>
   <div class="summary-item"><div class="val">${fmt(liveCompSec())}</div><div class="lbl">Compression time</div></div>
@@ -1087,12 +1188,29 @@ function doReset(){
   document.getElementById('customDrug').value='';
   document.getElementById('drugSelect').selectedIndex=0;
   setEnabled(false); updateCompBtns('ended');
+  lastSpoken=''; lastSpokenAt=0;
+  window.speechSynthesis.cancel();
   renderLog(); closeReset();
 }
 
 setInterval(()=>{ if(!codeRunning) document.getElementById('wallclock').textContent=new Date().toLocaleTimeString(); },1000);
 
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+
+// Initialise voice UI from saved prefs
+initVoiceUI();
+
+// iOS requires speechSynthesis to be triggered inside a user gesture first.
+// We prime it silently on the first tap anywhere on the page.
+let voicePrimed = false;
+document.addEventListener('click', function primeVoice(){
+  if(voicePrimed) return;
+  voicePrimed = true;
+  let u = new SpeechSynthesisUtterance('');
+  u.volume = 0;
+  window.speechSynthesis.speak(u);
+  document.removeEventListener('click', primeVoice);
+}, {once:true});
 
 renderLog();
 </script>
